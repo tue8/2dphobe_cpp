@@ -142,6 +142,75 @@ void pb_app::draw_quad(quad m_quad)
 		});
 }
 
+//vertex vertices_i[] = {
+//    /* ----- NDC ---------- TEX COORDS -- */
+//    {{-0.5f, -0.5f,  1.f},     {0.0f, 0.0f}},
+//    {{0.5f, -0.5f,  1.f},      {1.0f, 0.0f}},
+//                                          
+//    {{0.5f,  0.5f,  1.f},      {1.0f, 1.0f}},
+//    {{-0.5f,  0.5f,  1.f},     {0.0f, 1.0f}},
+//                                          
+//    {{-0.5f,  0.5f,  1.f},     {0.0f, 1.0f}},
+//    {{-0.5f, -0.5f,  1.f},     {0.0f, 0.0f}},
+//                                          
+//    {{0.5f,  0.5f,  1.f},      {1.0f, 1.0f}},
+//    {{0.5f, -0.5f,  1.f},      {1.0f, 0.0f}},
+//};
+
+void pb_app::draw_g_quad(quad g_quad)
+{
+	float local_mat_index = (float)m_renderer.push_g_local_mat(g_quad.get_local_mat());
+
+	m_renderer.push_g_vert({
+		{-0.5f, -0.5f,  1.f},
+		local_mat_index,
+		{1.f, 1.f, 1.f},
+		});
+
+	m_renderer.push_g_vert({
+		{0.5f, -0.5f,  1.f},
+		local_mat_index,
+		{1.f, 1.f, 1.f},
+		});
+
+	m_renderer.push_g_vert({
+		{0.5f,  0.5f,  1.f},
+		local_mat_index,
+		{1.f, 1.f, 1.f},
+		});
+
+	m_renderer.push_g_vert({
+		{-0.5f,  0.5f,  1.f},
+		local_mat_index,
+		{1.f, 1.f, 1.f},
+		});
+
+	m_renderer.push_g_vert({
+		{-0.5f,  0.5f,  1.f},
+		local_mat_index,
+		{1.f, 1.f, 1.f},
+		});
+
+	m_renderer.push_g_vert({
+		{-0.5f, -0.5f,  1.f},
+		local_mat_index,
+		{1.f, 1.f, 1.f},
+		});
+
+	m_renderer.push_g_vert({
+		{0.5f, 0.5f,  1.f},
+		local_mat_index,
+		{1.f, 1.f, 1.f},
+		});
+
+	m_renderer.push_g_vert({
+		{0.5f,  -0.5f,  1.f},
+		local_mat_index,
+		{1.f, 1.f, 1.f},
+		});
+}
+
+
 /*
 * I have no idea what I'm doing... Shit.
 */

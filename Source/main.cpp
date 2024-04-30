@@ -21,6 +21,7 @@ class app : public pb_app
 private:
     unsigned int quad_texture;
     quad *quads;
+    quad g_quad;
 public:
     init_pb_app(app);
 
@@ -28,6 +29,10 @@ public:
     {
         if (!load_texture(quad_texture, "\\Users\\admin\\Desktop\\2dphobe_cpp\\Data\\Textures\\box.png"))
             end();
+
+
+        g_quad.size = glm::vec3(QUAD_SIZE, QUAD_SIZE, 0.f);
+        g_quad.pos = glm::vec3(30.f, 30.f, 0.f);
 
         quads = new quad[QUAD_COUNT];
 
@@ -42,6 +47,7 @@ public:
                 i++;
             }
         }
+        
     }
 
     void render()
@@ -50,6 +56,7 @@ public:
         {
             draw_quad(quads[i]);
         }
+        draw_g_quad(g_quad);
     }
 
     void cleanup()

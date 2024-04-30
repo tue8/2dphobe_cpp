@@ -51,6 +51,41 @@ const char *frag_src =
 "   fo = vec4(fcolor, 1.f) * texture(texs[index], ftexcoord);\n"
 "}\n\0";
 
+const char *g_vert_src =
+"#version 430 core\n"
+"layout (location = 0) in vec3 vpos;\n"
+"layout (location = 1) in float vlocal_mat_index;\n"
+"layout (location = 2) in vec3 vcolor;\n"
+
+"layout (std430, binding = 1) buffer vlocal_mats\n"
+"{\n"
+"    mat4 models[];\n"
+"};\n"
+
+"uniform mat4 model;\n"
+"uniform mat4 view;\n"
+"uniform mat4 proj;\n"
+
+"out vec3 fcolor;\n"
+
+"void main()\n"
+"{\n"
+"   int index = int(vlocal_mat_index);\n"
+"   gl_Position = proj * view * models[index] * vec4(vpos, 1.0);\n"
+"   fcolor = vcolor;\n"
+"}\0";
+
+const char *g_frag_src =
+"#version 430 core\n"
+"in vec3 fcolor;"
+
+"out vec4 fo;\n"
+
+"void main()\n"
+"{\n"
+"   fo = vec4(fcolor, 1.f);\n"
+"}\n\0";
+
 
 int shader::create(unsigned int shader, const char **src) const
 {
@@ -78,16 +113,23 @@ int shader::link() const
 int shader::init(int max_textures)
 {
     unsigned int vertshader, fragshader;
-    const char *vert_csrc = vert_src;
-    char *frag_csrc = (char *)malloc(strlen(frag_src) + 1);
-    sprintf(frag_csrc, frag_src, max_textures);
+    const char *vert_csrc = (max_textures == -1) ? g_vert_src : vert_src;
+    char *frag_csrc = (char *)g_frag_src;
+    if (max_textures != -1)
+    {
+        frag_csrc = (char *)malloc(strlen(frag_src) + 1);
+        sprintf(frag_csrc, frag_src, max_textures);
+    }
 
     vertshader = glCreateShader(GL_VERTEX_SHADER);
     create(vertshader, &vert_csrc);
 
     fragshader = glCreateShader(GL_FRAGMENT_SHADER);
     create(fragshader, (const char **)&frag_csrc);
-    free(frag_csrc);
+    if (max_textures != -1)
+    {
+        free(frag_csrc);
+    }
 
     id = glCreateProgram();
     glAttachShader(id, vertshader);

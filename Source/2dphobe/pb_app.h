@@ -24,6 +24,7 @@ public:
     bool run();
     void end();
     void draw_quad(quad m_quad);
+    void draw_g_quad(quad m_quad);
     bool load_texture(unsigned int &texture_id, const char *texture_dir) const;
     void debug_cam(float cam_speed);
 
