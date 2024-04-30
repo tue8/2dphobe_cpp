@@ -24,10 +24,14 @@ public:
     bool run();
     void end();
     void draw_quad(quad m_quad);
-    void draw_g_quad(quad m_quad);
     bool load_texture(unsigned int &texture_id, const char *texture_dir) const;
     void debug_cam(float cam_speed);
-
+    bool renderer_get_geometric_mode();
+    void renderer_set_geometric_mode(bool g);
+private:
+    void draw_m_quad(quad m_quad);
+    void draw_g_quad(quad m_quad);
+public:
     virtual void init() {}
     virtual void process_input() {}
     virtual void update() {}

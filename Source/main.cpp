@@ -27,7 +27,7 @@ public:
 
     void init()
     {
-        if (!load_texture(quad_texture, "\\Users\\admin\\Desktop\\2dphobe_cpp\\Data\\Textures\\box.png"))
+        if (!load_texture(quad_texture, "\\\python\\2dphobe_cpp\\Data\\Textures\\box.png"))
             end();
 
 
@@ -56,7 +56,8 @@ public:
         {
             draw_quad(quads[i]);
         }
-        draw_g_quad(g_quad);
+        renderer_set_geometric_mode(true);
+        draw_quad(g_quad);
     }
 
     void cleanup()

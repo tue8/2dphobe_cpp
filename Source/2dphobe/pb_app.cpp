@@ -88,7 +88,25 @@ bool pb_app::load_texture(unsigned int &texture_id, const char *texture_dir) con
 	return true;
 }
 
+void pb_app::renderer_set_geometric_mode(bool g)
+{
+	m_renderer.set_geometric_mode(g);
+}
+
+bool pb_app::renderer_get_geometric_mode()
+{
+	return m_renderer.get_geometric_mode();
+}
+
 void pb_app::draw_quad(quad m_quad)
+{
+	if (m_renderer.get_geometric_mode())
+		draw_g_quad(m_quad);
+	else
+		draw_m_quad(m_quad);
+}
+
+void pb_app::draw_m_quad(quad m_quad)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(m_quad.get_local_mat());
 	float texture_index = m_renderer.get_texture_index((float)m_quad.get_texture_id());

@@ -40,6 +40,8 @@ struct simple_arr
 class renderer
 {
 private:
+    bool geometric;
+
     unsigned int m_vao;
     unsigned int m_vbo;
     unsigned int m_ssbo;
@@ -75,6 +77,8 @@ public:
     int push_local_mat(const glm::mat4 local_mat);
     int push_g_local_mat(const glm::mat4 local_mat);
     glm::vec3& get_view_pos();
+    bool get_geometric_mode();
+    void set_geometric_mode(bool g);
 private:
     void init_vao();
     void init_g_vao();

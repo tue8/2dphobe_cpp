@@ -134,6 +134,8 @@ void renderer::init(unsigned int width, unsigned int height)
     this->width = width;
     this->height = height;
 
+    geometric = false;
+
     vertices.count = 0;
     texture_count = 0;
     local_mats.count = 0;
@@ -155,6 +157,20 @@ void renderer::init(unsigned int width, unsigned int height)
     init_g_ssbo();
 
     cam_view_pos = glm::vec3(50.f, 50.f, 0.f);
+}
+
+void renderer::set_geometric_mode(bool g)
+{
+    if (geometric != g &&
+        vertices.count > 0 &&
+        g_vertices.count > 0)
+        draw();
+    geometric = g;
+}
+
+bool renderer::get_geometric_mode()
+{
+    return geometric;
 }
 
 /*
@@ -195,17 +211,23 @@ glm::vec3 &renderer::get_view_pos()
 
 void renderer::flush()
 {
-    memset(vertices.arr, 0, vertices.count * sizeof(vertex));
-    memset(g_vertices.arr, 0, g_vertices.count * sizeof(g_vertex));
-    memset(textures, 0, texture_count * sizeof(unsigned int));
-    memset(local_mats.arr, 0, local_mats.count * sizeof(glm::mat4));
-    memset(g_local_mats.arr, 0, g_local_mats.count * sizeof(glm::mat4));
-
-    vertices.count = 0;
-    g_vertices.count = 0;
-    texture_count = 0;
-    local_mats.count = 0;
-    g_local_mats.count = 0;
+    if (!geometric)
+    {
+        memset(vertices.arr, 0, vertices.count * sizeof(vertex));
+        memset(textures, 0, texture_count * sizeof(unsigned int));
+        memset(local_mats.arr, 0, local_mats.count * sizeof(glm::mat4));
+        vertices.count = 0;
+        texture_count = 0;
+        local_mats.count = 0;
+    }
+    else
+    {
+        memset(g_vertices.arr, 0, g_vertices.count * sizeof(g_vertex));
+        memset(g_local_mats.arr, 0, g_local_mats.count * sizeof(glm::mat4));
+        g_vertices.count = 0;
+        g_local_mats.count = 0;
+    }
+    geometric = false;
 }
 
 
@@ -316,26 +338,27 @@ void renderer::update_g_vertices() const
 
 void renderer::draw()
 {
-    finalize_mvp(m_shader);
-    finalize_samplers();
-    finalize_ssbo();
-    finalize_textures();
-    update_vertices();
+    if (!geometric)
+    {
+        finalize_mvp(m_shader);
+        finalize_samplers();
+        finalize_ssbo();
+        finalize_textures();
+        update_vertices();
+        m_shader.bind();
+        glBindVertexArray(m_vao);
+        glDrawArrays(GL_TRIANGLES, 0, vertices.count);
+    }
+    else
+    {
+        finalize_mvp(g_shader);
+        finalize_g_ssbo();
+        update_g_vertices();
+        g_shader.bind();
+        glBindVertexArray(g_vao);
+        glDrawArrays(GL_LINES, 0, g_vertices.count);
+    }
 
-    finalize_mvp(g_shader);
-    finalize_g_ssbo();
-    update_g_vertices();
-
-    m_shader.bind();
-    glBindVertexArray(m_vao);
-    glDrawArrays(GL_TRIANGLES, 0, vertices.count);
-
-    g_shader.bind();
-    glBindVertexArray(g_vao);
-    glDrawArrays(GL_LINES, 0, g_vertices.count);
-
-    g_shader.unbind();
-    glBindVertexArray(0);
     flush();
 }
 
