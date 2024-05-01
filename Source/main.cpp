@@ -27,12 +27,13 @@ public:
 
     void init()
     {
-        if (!load_texture(quad_texture, "\\\python\\2dphobe_cpp\\Data\\Textures\\box.png"))
+        if (!load_texture(quad_texture, "\\Users\\admin\\Desktop\\2dphobe_cpp\\Data\\Textures\\box.png"))
             end();
 
 
         g_quad.size = glm::vec3(QUAD_SIZE, QUAD_SIZE, 0.f);
         g_quad.pos = glm::vec3(30.f, 30.f, 0.f);
+        g_quad.load_texture(quad_texture);
 
         quads = new quad[QUAD_COUNT];
 
@@ -53,7 +54,7 @@ public:
     void render()
     {
         renderer_set_geometric_mode(true);
-        for (int i = 0; i < QUAD_SIZE; i++)
+        for (int i = 0; i < QUAD_COUNT; i++)
         {
             draw_quad(quads[i]);
         }

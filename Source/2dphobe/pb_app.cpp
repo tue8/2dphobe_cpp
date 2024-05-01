@@ -101,12 +101,12 @@ bool pb_app::renderer_get_geometric_mode()
 void pb_app::draw_quad(quad m_quad)
 {
 	if (m_renderer.get_geometric_mode())
-		draw_g_quad(m_quad);
+		g_draw_quad(m_quad);
 	else
-		draw_m_quad(m_quad);
+		m_draw_quad(m_quad);
 }
 
-void pb_app::draw_m_quad(quad m_quad)
+void pb_app::m_draw_quad(quad m_quad)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(m_quad.get_local_mat());
 	float texture_index = m_renderer.get_texture_index((float)m_quad.get_texture_id());
@@ -160,68 +160,53 @@ void pb_app::draw_m_quad(quad m_quad)
 		});
 }
 
-//vertex vertices_i[] = {
-//    /* ----- NDC ---------- TEX COORDS -- */
-//    {{-0.5f, -0.5f,  1.f},     {0.0f, 0.0f}},
-//    {{0.5f, -0.5f,  1.f},      {1.0f, 0.0f}},
-//                                          
-//    {{0.5f,  0.5f,  1.f},      {1.0f, 1.0f}},
-//    {{-0.5f,  0.5f,  1.f},     {0.0f, 1.0f}},
-//                                          
-//    {{-0.5f,  0.5f,  1.f},     {0.0f, 1.0f}},
-//    {{-0.5f, -0.5f,  1.f},     {0.0f, 0.0f}},
-//                                          
-//    {{0.5f,  0.5f,  1.f},      {1.0f, 1.0f}},
-//    {{0.5f, -0.5f,  1.f},      {1.0f, 0.0f}},
-//};
-
-void pb_app::draw_g_quad(quad g_quad)
+void pb_app::g_draw_quad(quad g_quad)
 {
-	float local_mat_index = (float)m_renderer.push_g_local_mat(g_quad.get_local_mat());
+	float local_mat_index = (float)m_renderer.push_local_mat(g_quad.get_local_mat());
 
-	m_renderer.push_g_vert({
+	m_renderer.g_push_vert({
 		{-0.5f, -0.5f,  1.f},
 		local_mat_index,
 		{1.f, 1.f, 1.f},
 		});
 
-	m_renderer.push_g_vert({
+	m_renderer.g_push_vert({
 		{0.5f, -0.5f,  1.f},
 		local_mat_index,
 		{1.f, 1.f, 1.f},
 		});
 
-	m_renderer.push_g_vert({
+	m_renderer.g_push_vert({
 		{0.5f,  0.5f,  1.f},
 		local_mat_index,
 		{1.f, 1.f, 1.f},
 		});
 
-	m_renderer.push_g_vert({
+	m_renderer.g_push_vert({
 		{-0.5f,  0.5f,  1.f},
 		local_mat_index,
 		{1.f, 1.f, 1.f},
 		});
 
-	m_renderer.push_g_vert({
+	m_renderer.g_push_vert({
 		{-0.5f,  0.5f,  1.f},
 		local_mat_index,
 		{1.f, 1.f, 1.f},
 		});
 
-	m_renderer.push_g_vert({
+	m_renderer.g_push_vert({
 		{-0.5f, -0.5f,  1.f},
 		local_mat_index,
 		{1.f, 1.f, 1.f},
 		});
 
-	m_renderer.push_g_vert({
+	m_renderer.g_push_vert({
 		{0.5f, 0.5f,  1.f},
 		local_mat_index,
 		{1.f, 1.f, 1.f},
 		});
 
-	m_renderer.push_g_vert({
+	m_renderer.g_push_vert({
 		{0.5f,  -0.5f,  1.f},
 		local_mat_index,
 		{1.f, 1.f, 1.f},
@@ -303,7 +288,7 @@ bool pb_app::run()
 		render();
 
 		m_renderer.draw();
-		m_renderer.flush(true);
+		m_renderer.set_geometric_mode_nocheck(false);
 		glfwSwapBuffers(window);
 	}
 

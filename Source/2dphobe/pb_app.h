@@ -29,8 +29,8 @@ public:
     bool renderer_get_geometric_mode();
     void renderer_set_geometric_mode(bool g);
 private:
-    void draw_m_quad(quad m_quad);
-    void draw_g_quad(quad m_quad);
+    void m_draw_quad(quad m_quad);
+    void g_draw_quad(quad g_quad);
 public:
     virtual void init() {}
     virtual void process_input() {}

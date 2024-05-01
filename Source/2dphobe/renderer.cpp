@@ -3,7 +3,6 @@
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 
-
 #define QUAD_VERT 6
 #define MAX_QUAD 1000
 
@@ -63,7 +62,7 @@ void renderer::init_vao()
     glBindVertexArray(0);
 }
 
-void renderer::init_g_vao()
+void renderer::g_init_vao()
 {
     glGenVertexArrays(1, &g_vao);
     glGenBuffers(1, &g_vbo);
@@ -105,27 +104,14 @@ void renderer::init_g_vao()
 
 void renderer::init_ssbo()
 {
-    glGenBuffers(1, &m_ssbo);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssbo);
+    glGenBuffers(1, &ssbo);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
     glBufferData(GL_SHADER_STORAGE_BUFFER,
         sizeof(glm::mat4) * MAX_QUAD,
         NULL,
         GL_DYNAMIC_DRAW);
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_ssbo);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-}
-
-void renderer::init_g_ssbo()
-{
-    glGenBuffers(1, &g_ssbo);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_ssbo);
-    glBufferData(GL_SHADER_STORAGE_BUFFER,
-        sizeof(glm::mat4) * MAX_QUAD,
-        NULL,
-        GL_DYNAMIC_DRAW);
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, g_ssbo);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
@@ -149,12 +135,10 @@ void renderer::init(unsigned int width, unsigned int height)
     g_vertices.arr = new g_vertex[QUAD_VERT * MAX_QUAD];
     textures = new unsigned int[max_textures];
     local_mats.arr = new glm::mat4[MAX_QUAD];
-    g_local_mats.arr = new glm::mat4[MAX_QUAD];
 
     init_vao();
-    init_g_vao();
+    g_init_vao();
     init_ssbo();
-    init_g_ssbo();
 
     cam_view_pos = glm::vec3(50.f, 50.f, 0.f);
 }
@@ -164,10 +148,12 @@ void renderer::set_geometric_mode(bool g)
     if (geometric != g &&
          (!geometric && vertices.count > 0) ||
          (geometric && g_vertices.count > 0))
-    {
         draw();
-        flush(false);
-    }
+    geometric = g;
+}
+
+void renderer::set_geometric_mode_nocheck(bool g)
+{
     geometric = g;
 }
 
@@ -185,7 +171,7 @@ void renderer::push_vert(const vertex &vert)
     vertices.arr[vertices.count++] = vert;
 }
 
-void renderer::push_g_vert(const g_vertex &vert)
+void renderer::g_push_vert(const g_vertex &vert)
 {
     g_vertices.arr[g_vertices.count++] = vert;
 }
@@ -194,23 +180,9 @@ void renderer::push_g_vert(const g_vertex &vert)
 int renderer::push_local_mat(const glm::mat4 local_mat)
 {
     if (local_mats.count + 1 >= MAX_QUAD)
-    {
         draw();
-        flush(false);
-    }
     local_mats.arr[local_mats.count] = local_mat;
     return local_mats.count++;
-}
-
-int renderer::push_g_local_mat(const glm::mat4 local_mat)
-{
-    if (g_local_mats.count + 1 >= MAX_QUAD)
-    {
-        draw();
-        flush(false);
-    }
-    g_local_mats.arr[g_local_mats.count] = local_mat;
-    return g_local_mats.count++;
 }
 
 glm::vec3 &renderer::get_view_pos()
@@ -218,24 +190,22 @@ glm::vec3 &renderer::get_view_pos()
     return cam_view_pos;
 }
 
-void renderer::flush(bool reset_geometric_mode)
+void renderer::flush()
 {
-
+    if (geometric)
+    {
         memset(vertices.arr, 0, vertices.count * sizeof(vertex));
         memset(textures, 0, texture_count * sizeof(unsigned int));
-        memset(local_mats.arr, 0, local_mats.count * sizeof(glm::mat4));
         vertices.count = 0;
         texture_count = 0;
-        local_mats.count = 0;
-
+    }
+    else
+    {
         memset(g_vertices.arr, 0, g_vertices.count * sizeof(g_vertex));
-        memset(g_local_mats.arr, 0, g_local_mats.count * sizeof(glm::mat4));
         g_vertices.count = 0;
-        g_local_mats.count = 0;
-    
-
-    if (reset_geometric_mode)
-        geometric = false;
+    }
+    memset(local_mats.arr, 0, local_mats.count * sizeof(glm::mat4));
+    local_mats.count = 0;
 }
 
 
@@ -257,10 +227,7 @@ float renderer::get_texture_index(float texure_id)
     if (!tex_find)
     {
         if (texture_count > max_textures - 1)
-        {
             draw();
-            flush(false);
-        }
         textures[texture_count] = texure_id;
         tex_index = (float)texture_count++;
     }
@@ -301,20 +268,11 @@ void renderer::finalize_mvp(shader &shader)
 
 void renderer::finalize_ssbo() const
 {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssbo);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER,
                     0,
                     local_mats.count * sizeof(glm::mat4),
                     local_mats.arr);
-}
-
-void renderer::finalize_g_ssbo() const
-{
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, g_ssbo);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER,
-        0,
-        g_local_mats.count * sizeof(glm::mat4),
-        g_local_mats.arr);
 }
 
 void renderer::finalize_textures() const
@@ -335,7 +293,7 @@ void renderer::update_vertices() const
     glBindVertexArray(0);
 }
 
-void renderer::update_g_vertices() const
+void renderer::g_update_vertices() const
 {
     glBindVertexArray(g_vao);
 
@@ -347,28 +305,35 @@ void renderer::update_g_vertices() const
     glBindVertexArray(0);
 }
 
+void renderer::m_draw()
+{
+    finalize_mvp(m_shader);
+    finalize_samplers();
+    finalize_ssbo();
+    finalize_textures();
+    update_vertices();
+    m_shader.bind();
+    glBindVertexArray(m_vao);
+    glDrawArrays(GL_TRIANGLES, 0, vertices.count);
+}
+
+void renderer::g_draw()
+{
+    finalize_mvp(g_shader);
+    finalize_ssbo();
+    g_update_vertices();
+    g_shader.bind();
+    glBindVertexArray(g_vao);
+    glDrawArrays(GL_LINES, 0, g_vertices.count);
+}
+
 void renderer::draw()
 {
     if (!geometric)
-    {
-        finalize_mvp(m_shader);
-        finalize_samplers();
-        finalize_ssbo();
-        finalize_textures();
-        update_vertices();
-        m_shader.bind();
-        glBindVertexArray(m_vao);
-        glDrawArrays(GL_TRIANGLES, 0, vertices.count);
-    }
+        m_draw();
     else
-    {
-        finalize_mvp(g_shader);
-        finalize_g_ssbo();
-        update_g_vertices();
-        g_shader.bind();
-        glBindVertexArray(g_vao);
-        glDrawArrays(GL_LINES, 0, g_vertices.count);
-    }
+        g_draw();
+    flush();
 }
 
 renderer::~renderer()
@@ -380,7 +345,6 @@ renderer::~renderer()
     glDeleteBuffers(1, &g_vbo);
     delete[] textures;
     delete[] local_mats.arr;
-    delete[] g_local_mats.arr;
     delete[] vertices.arr;
     delete[] g_vertices.arr;
 } 

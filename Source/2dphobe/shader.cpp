@@ -57,7 +57,7 @@ const char *g_vert_src =
 "layout (location = 1) in float vlocal_mat_index;\n"
 "layout (location = 2) in vec3 vcolor;\n"
 
-"layout (std430, binding = 1) buffer vlocal_mats\n"
+"layout (std430, binding = 0) buffer vlocal_mats\n"
 "{\n"
 "    mat4 models[];\n"
 "};\n"
