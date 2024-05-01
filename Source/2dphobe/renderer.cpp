@@ -162,9 +162,12 @@ void renderer::init(unsigned int width, unsigned int height)
 void renderer::set_geometric_mode(bool g)
 {
     if (geometric != g &&
-        vertices.count > 0 &&
-        g_vertices.count > 0)
+         (!geometric && vertices.count > 0) ||
+         (geometric && g_vertices.count > 0))
+    {
         draw();
+        flush(false);
+    }
     geometric = g;
 }
 
@@ -191,7 +194,10 @@ void renderer::push_g_vert(const g_vertex &vert)
 int renderer::push_local_mat(const glm::mat4 local_mat)
 {
     if (local_mats.count + 1 >= MAX_QUAD)
+    {
         draw();
+        flush(false);
+    }
     local_mats.arr[local_mats.count] = local_mat;
     return local_mats.count++;
 }
@@ -199,7 +205,10 @@ int renderer::push_local_mat(const glm::mat4 local_mat)
 int renderer::push_g_local_mat(const glm::mat4 local_mat)
 {
     if (g_local_mats.count + 1 >= MAX_QUAD)
+    {
         draw();
+        flush(false);
+    }
     g_local_mats.arr[g_local_mats.count] = local_mat;
     return g_local_mats.count++;
 }
@@ -209,25 +218,24 @@ glm::vec3 &renderer::get_view_pos()
     return cam_view_pos;
 }
 
-void renderer::flush()
+void renderer::flush(bool reset_geometric_mode)
 {
-    if (!geometric)
-    {
+
         memset(vertices.arr, 0, vertices.count * sizeof(vertex));
         memset(textures, 0, texture_count * sizeof(unsigned int));
         memset(local_mats.arr, 0, local_mats.count * sizeof(glm::mat4));
         vertices.count = 0;
         texture_count = 0;
         local_mats.count = 0;
-    }
-    else
-    {
+
         memset(g_vertices.arr, 0, g_vertices.count * sizeof(g_vertex));
         memset(g_local_mats.arr, 0, g_local_mats.count * sizeof(glm::mat4));
         g_vertices.count = 0;
         g_local_mats.count = 0;
-    }
-    geometric = false;
+    
+
+    if (reset_geometric_mode)
+        geometric = false;
 }
 
 
@@ -249,7 +257,10 @@ float renderer::get_texture_index(float texure_id)
     if (!tex_find)
     {
         if (texture_count > max_textures - 1)
+        {
             draw();
+            flush(false);
+        }
         textures[texture_count] = texure_id;
         tex_index = (float)texture_count++;
     }
@@ -358,8 +369,6 @@ void renderer::draw()
         glBindVertexArray(g_vao);
         glDrawArrays(GL_LINES, 0, g_vertices.count);
     }
-
-    flush();
 }
 
 renderer::~renderer()

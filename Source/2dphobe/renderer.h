@@ -71,6 +71,7 @@ public:
     ~renderer();
     void init(unsigned int width, unsigned int height);
     void draw();
+    void flush(bool reset_geometric_mode);
     void push_vert(const vertex &vert);
     void push_g_vert(const g_vertex &vert);
     float get_texture_index(float texure_id);
@@ -91,5 +92,4 @@ private:
     void finalize_textures() const;
     void update_vertices() const;
     void update_g_vertices() const;
-    void flush();
 };

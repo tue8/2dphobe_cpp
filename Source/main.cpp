@@ -52,11 +52,12 @@ public:
 
     void render()
     {
+        renderer_set_geometric_mode(true);
         for (int i = 0; i < QUAD_SIZE; i++)
         {
             draw_quad(quads[i]);
         }
-        renderer_set_geometric_mode(true);
+        renderer_set_geometric_mode(false);
         draw_quad(g_quad);
     }
 

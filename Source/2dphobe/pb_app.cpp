@@ -303,6 +303,7 @@ bool pb_app::run()
 		render();
 
 		m_renderer.draw();
+		m_renderer.flush(true);
 		glfwSwapBuffers(window);
 	}
 
