@@ -5,6 +5,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <iostream>
+#include <sstream>
+
+#define PI 3.14159265
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
@@ -45,6 +48,8 @@ pb_app::pb_app(unsigned int width,
 
 	stbi_set_flip_vertically_on_load(true);
 	created = true;
+
+	glfwSwapInterval(1);
 }
 
 void pb_app::end()
@@ -98,7 +103,7 @@ bool pb_app::renderer_get_geometric_mode()
 	return m_renderer.get_geometric_mode();
 }
 
-void pb_app::draw_quad(quad m_quad)
+void pb_app::draw_quad(obj m_quad)
 {
 	if (m_renderer.get_geometric_mode())
 		g_draw_quad(m_quad);
@@ -106,7 +111,7 @@ void pb_app::draw_quad(quad m_quad)
 		m_draw_quad(m_quad);
 }
 
-void pb_app::m_draw_quad(quad m_quad)
+void pb_app::m_draw_quad(obj m_quad)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(m_quad.get_local_mat());
 	float texture_index = m_renderer.get_texture_index((float)m_quad.get_texture_id());
@@ -160,7 +165,43 @@ void pb_app::m_draw_quad(quad m_quad)
 		});
 }
 
-void pb_app::g_draw_quad(quad g_quad)
+void pb_app::g_draw_circle(obj g_cirlce, unsigned int angle)
+{
+	float local_mat_index = (float)m_renderer.push_local_mat(g_cirlce.get_local_mat());
+	float last_x = -1.f;
+	float last_y = -1.f;
+
+	int i = 0;
+	int count = 1;
+	float curr_x = sin(angle * PI / 180);
+	float curr_y = cos(angle * PI / 180);
+
+	while (i <= 360)
+	{
+		if (count % 2 == 0)
+		{
+			curr_x = sin(i * PI / 180);
+			curr_y = cos(i * PI / 180);
+		}
+
+		m_renderer.g_push_vert({
+			{curr_x, curr_y,  1.f},
+			local_mat_index,
+			{1.f, 1.f, 1.f},
+		});
+
+		i += angle;
+		count++;
+	}
+
+	m_renderer.g_push_vert({
+		{(float)sin(angle * PI / 180), (float)cos(angle * PI / 180), 1.f},
+		local_mat_index,
+		{1.f, 1.f, 1.f},
+	});
+}
+
+void pb_app::g_draw_quad(obj g_quad)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(g_quad.get_local_mat());
 
@@ -213,11 +254,7 @@ void pb_app::g_draw_quad(quad g_quad)
 		});
 }
 
-
-/*
-* I have no idea what I'm doing... Shit.
-*/
-void pb_app::debug_cam(float cam_speed)
+void pb_app::debug_cam(float cam_speed, float dt)
 {
 	static bool hold = false;
 	static glm::vec3 origin;
@@ -232,7 +269,7 @@ void pb_app::debug_cam(float cam_speed)
 		glm::vec3 diff = origin - cursor_pos;
 		if (prev_diff == diff)
 			origin = glm::vec3(cursor_x, cursor_y, 0.f);
-		m_renderer.get_view_pos() -= diff * cam_speed;
+		m_renderer.get_view_pos() -= diff * dt * cam_speed;
 		prev_diff = diff;
 		hold = true;
 	}
@@ -264,22 +301,22 @@ bool pb_app::run()
 	while (!glfwWindowShouldClose(window) && !end_signal)
 	{
 		float curr_frame = (float)glfwGetTime();
+		frame++;
+
 		delta_time = curr_frame - last_frame;
 		last_frame = curr_frame;
 
 		if (curr_frame - last_sec_frame >= 1.f)
 		{
-			fps = frame;
+			fps = double(frame) / (curr_frame - last_sec_frame);
 			frame = 0;
 			last_sec_frame = curr_frame;
 		}
-		else
-			frame++;
 
 		glfwPollEvents();
 		glfwGetCursorPos(window, &cursor_x, &cursor_y);
 
-		debug_cam(0.4f);
+		debug_cam(5.f, delta_time);
 
 		process_input();
 		update();
@@ -287,9 +324,14 @@ bool pb_app::run()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		render();
 
+		if (m_renderer.get_geometric_mode())
+			m_renderer.set_geometric_mode(false);
 		m_renderer.draw();
-		m_renderer.set_geometric_mode_nocheck(false);
+		std::stringstream ss;
+		ss << "FPS: " << fps << " Draw calls: " << m_renderer.draw_call;
+		glfwSetWindowTitle(window, ss.str().c_str());
 		glfwSwapBuffers(window);
+		m_renderer.draw_call = 0;
 	}
 
 	end();

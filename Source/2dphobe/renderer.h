@@ -67,6 +67,7 @@ private:
 
     simple_arr<glm::mat4> local_mats;
 public:
+    unsigned int draw_call;
     ~renderer();
     void init(unsigned int width, unsigned int height);
     void draw();
@@ -78,10 +79,10 @@ public:
     bool get_geometric_mode();
     void set_geometric_mode(bool g);
     void set_geometric_mode_nocheck(bool g);
+    void flush();
 private:
     void m_draw();
     void g_draw();
-    void flush();
     void init_vao();
     void g_init_vao();
     void init_ssbo();

@@ -126,10 +126,12 @@ void renderer::init(unsigned int width, unsigned int height)
     texture_count = 0;
     local_mats.count = 0;
 
+    draw_call = 0;
+
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_textures);
 
     m_shader.init(max_textures);
-    g_shader.init(-1);
+    g_shader.init(0);
 
     vertices.arr = new vertex[QUAD_VERT * MAX_QUAD];
     g_vertices.arr = new g_vertex[QUAD_VERT * MAX_QUAD];
@@ -143,17 +145,15 @@ void renderer::init(unsigned int width, unsigned int height)
     cam_view_pos = glm::vec3(50.f, 50.f, 0.f);
 }
 
-void renderer::set_geometric_mode(bool g)
+void renderer::set_geometric_mode_nocheck(bool g)
 {
-    if (geometric != g &&
-         (!geometric && vertices.count > 0) ||
-         (geometric && g_vertices.count > 0))
-        draw();
     geometric = g;
 }
 
-void renderer::set_geometric_mode_nocheck(bool g)
+void renderer::set_geometric_mode(bool g)
 {
+    if (geometric != g)
+        draw();
     geometric = g;
 }
 
@@ -192,19 +192,15 @@ glm::vec3 &renderer::get_view_pos()
 
 void renderer::flush()
 {
-    if (geometric)
-    {
-        memset(vertices.arr, 0, vertices.count * sizeof(vertex));
-        memset(textures, 0, texture_count * sizeof(unsigned int));
-        vertices.count = 0;
-        texture_count = 0;
-    }
-    else
-    {
-        memset(g_vertices.arr, 0, g_vertices.count * sizeof(g_vertex));
-        g_vertices.count = 0;
-    }
+    memset(vertices.arr, 0, vertices.count * sizeof(vertex));
+    memset(textures, 0, texture_count * sizeof(unsigned int));
+    vertices.count = 0;
+    texture_count = 0;
+
+    memset(g_vertices.arr, 0, g_vertices.count * sizeof(g_vertex));
+    g_vertices.count = 0;
     memset(local_mats.arr, 0, local_mats.count * sizeof(glm::mat4));
+
     local_mats.count = 0;
 }
 
@@ -307,6 +303,7 @@ void renderer::g_update_vertices() const
 
 void renderer::m_draw()
 {
+    draw_call++;
     finalize_mvp(m_shader);
     finalize_samplers();
     finalize_ssbo();
@@ -315,25 +312,27 @@ void renderer::m_draw()
     m_shader.bind();
     glBindVertexArray(m_vao);
     glDrawArrays(GL_TRIANGLES, 0, vertices.count);
+    flush();
 }
 
 void renderer::g_draw()
 {
+    draw_call++;
     finalize_mvp(g_shader);
     finalize_ssbo();
     g_update_vertices();
     g_shader.bind();
     glBindVertexArray(g_vao);
     glDrawArrays(GL_LINES, 0, g_vertices.count);
+    flush();
 }
 
 void renderer::draw()
 {
-    if (!geometric)
+    if (!geometric && vertices.count > 0)
         m_draw();
-    else
+    else if (geometric && g_vertices.count > 0)
         g_draw();
-    flush();
 }
 
 renderer::~renderer()

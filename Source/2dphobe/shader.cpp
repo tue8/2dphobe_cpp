@@ -113,9 +113,9 @@ int shader::link() const
 int shader::init(int max_textures)
 {
     unsigned int vertshader, fragshader;
-    const char *vert_csrc = (max_textures == -1) ? g_vert_src : vert_src;
+    const char *vert_csrc = (max_textures == 0) ? g_vert_src : vert_src;
     char *frag_csrc = (char *)g_frag_src;
-    if (max_textures != -1)
+    if (max_textures != 0)
     {
         frag_csrc = (char *)malloc(strlen(frag_src) + 1);
         sprintf(frag_csrc, frag_src, max_textures);
@@ -126,7 +126,7 @@ int shader::init(int max_textures)
 
     fragshader = glCreateShader(GL_FRAGMENT_SHADER);
     create(fragshader, (const char **)&frag_csrc);
-    if (max_textures != -1)
+    if (max_textures != 0)
     {
         free(frag_csrc);
     }
