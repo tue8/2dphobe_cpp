@@ -9,6 +9,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <GLFW/glfw3.h>
+#include <windows.h>
 #include "2dphobe/pb_app.h"
 
 #define WIN_WIDTH 800
@@ -16,20 +17,37 @@
 #define QUAD_SIZE 100
 #define QUAD_COUNT (WIN_WIDTH * WIN_HEIGHT) / (QUAD_SIZE * QUAD_SIZE)
 
+std::string get_exe_path()
+{
+    char buffer[MAX_PATH];
+    GetModuleFileName(NULL, buffer, MAX_PATH);
+    std::string f(buffer);
+    return f.substr(0, f.find_last_of("\\/"));
+}
+
 class app : public pb_app
 {
 private:
     unsigned int quad_texture;
-    quad *quads;
+    obj *quads;
+    obj g_quad;
 public:
     init_pb_app(app);
 
     void init()
     {
-        if (!load_texture(quad_texture, "\\Users\\admin\\Desktop\\2dphobe_cpp\\Data\\Textures\\box.png"))
+        std::string path = get_exe_path();
+        path = path.substr(0, path.length() - strlen("Binary"));
+        path.append("Data\\Textures\\box.png");
+
+        if (!load_texture(quad_texture, path.c_str()))
             end();
 
-        quads = new quad[QUAD_COUNT];
+        g_quad.size = glm::vec3(QUAD_SIZE, QUAD_SIZE, 0.f);
+        g_quad.pos = glm::vec3(30.f, 30.f, 0.f);
+        g_quad.load_texture(quad_texture);
+
+        quads = new obj[QUAD_COUNT];
 
         int i = 0;
         for (float j = 0; j < WIN_WIDTH; j += QUAD_SIZE)
@@ -42,14 +60,17 @@ public:
                 i++;
             }
         }
+        
     }
 
     void render()
     {
-        for (int i = 0; i < QUAD_SIZE; i++)
+        renderer_set_geometric_mode(true);
+        for (int i = 0; i < QUAD_COUNT; i++)
         {
             draw_quad(quads[i]);
         }
+        g_draw_circle(g_quad, 10);
     }
 
     void cleanup()
