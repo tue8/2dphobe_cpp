@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="Include\glad\glad.c" />
     <ClCompile Include="Include\glm\detail\glm.cpp" />
-    <ClCompile Include="Source\2dphobe\quad.cpp" />
+    <ClCompile Include="Source\2dphobe\obj.cpp" />
     <ClCompile Include="Source\2dphobe\renderer.cpp" />
     <ClCompile Include="Source\2dphobe\pb_app.cpp" />
     <ClCompile Include="Source\2dphobe\shader.cpp" />
@@ -320,7 +320,7 @@
     <ClInclude Include="Include\glm\vector_relational.hpp" />
     <ClInclude Include="Include\KHR\khrplatform.h" />
     <ClInclude Include="Include\stb_image.h" />
-    <ClInclude Include="Source\2dphobe\quad.h" />
+    <ClInclude Include="Source\2dphobe\obj.h" />
     <ClInclude Include="Source\2dphobe\renderer.h" />
     <ClInclude Include="Source\2dphobe\pb_app.h" />
     <ClInclude Include="Source\2dphobe\shader.h" />
@@ -490,27 +490,27 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 
-class quad
+class obj
 {
 private:
     unsigned int texture_id;
@@ -10,7 +10,7 @@ public:
     glm::vec3 pos;
     glm::vec3 size;
 
-    quad();
+    obj();
     void load_texture(unsigned int id);
 
     /*

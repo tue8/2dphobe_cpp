@@ -9,6 +9,9 @@ private:
 	int link() const;
 	int create(unsigned int shader, const char **src) const;
 public:
+	/*
+	* max_textures == 0 --> use geometric shader
+	*/
 	int init(int max_textures);
 	unsigned int get_id() const;
 	void bind();
