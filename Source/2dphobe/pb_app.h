@@ -23,15 +23,20 @@ public:
     pb_app(unsigned int width, unsigned int height, const char *name);
     bool run();
     void end();
-    void draw_quad(obj m_quad);
+    void draw_quad(obj quad);
+    void draw_tri(obj tri);
+    void draw_circle(obj circle, float angle);
     bool load_texture(unsigned int &texture_id, const char *texture_dir) const;
     void debug_cam(float cam_speed, float dt);
     bool renderer_get_geometric_mode();
     void renderer_set_geometric_mode(bool g);
-    void g_draw_circle(obj g_circle, unsigned int angle);
 private:
-    void m_draw_quad(obj m_quad);
-    void g_draw_quad(obj g_quad);
+    void m_draw_quad(obj quad);
+    void g_draw_quad(obj quad);
+    void m_draw_circle(obj circle, float angle);
+    void g_draw_circle(obj circle, float angle);
+    void m_draw_tri(obj tri);
+    void g_draw_tri(obj tri);
 public:
     virtual void init() {}
     virtual void process_input() {}

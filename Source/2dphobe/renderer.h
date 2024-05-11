@@ -74,7 +74,7 @@ public:
     void push_vert(const vertex &vert);
     void g_push_vert(const g_vertex &vert);
     float get_texture_index(float texure_id);
-    int push_local_mat(const glm::mat4 local_mat);
+    int push_local_mat(const glm::mat4 &local_mat);
     glm::vec3& get_view_pos();
     bool get_geometric_mode();
     void set_geometric_mode(bool g);

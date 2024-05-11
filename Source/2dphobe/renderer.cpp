@@ -177,7 +177,7 @@ void renderer::g_push_vert(const g_vertex &vert)
 }
 
 
-int renderer::push_local_mat(const glm::mat4 local_mat)
+int renderer::push_local_mat(const glm::mat4 &local_mat)
 {
     if (local_mats.count + 1 >= MAX_QUAD)
         draw();
@@ -224,7 +224,7 @@ float renderer::get_texture_index(float texure_id)
     {
         if (texture_count > max_textures - 1)
             draw();
-        textures[texture_count] = texure_id;
+        textures[texture_count] = (unsigned int)texure_id;
         tex_index = (float)texture_count++;
     }
 

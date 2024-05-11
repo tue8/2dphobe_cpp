@@ -103,25 +103,25 @@ bool pb_app::renderer_get_geometric_mode()
 	return m_renderer.get_geometric_mode();
 }
 
-void pb_app::draw_quad(obj m_quad)
+void pb_app::draw_quad(obj quad)
 {
 	if (m_renderer.get_geometric_mode())
-		g_draw_quad(m_quad);
+		g_draw_quad(quad);
 	else
-		m_draw_quad(m_quad);
+		m_draw_quad(quad);
 }
 
-void pb_app::m_draw_quad(obj m_quad)
+void pb_app::m_draw_quad(obj quad)
 {
-	float local_mat_index = (float)m_renderer.push_local_mat(m_quad.get_local_mat());
-	float texture_index = m_renderer.get_texture_index((float)m_quad.get_texture_id());
+	float local_mat_index = (float)m_renderer.push_local_mat(quad.get_local_mat());
+	float texture_index = m_renderer.get_texture_index((float)quad.get_texture_id());
 
 	m_renderer.push_vert({
 		{-0.5f, -0.5f,  1.f},
 		{0.0f, 0.0f},
 		texture_index,
 		local_mat_index,
-		{1.f, 1.f, 1.f},
+		{quad.color.x, quad.color.y, quad.color.z},
 		});
 
 	m_renderer.push_vert({
@@ -129,7 +129,7 @@ void pb_app::m_draw_quad(obj m_quad)
 		{1.0f, 0.0f},
 		texture_index,
 		local_mat_index,
-		{1.f, 1.f, 1.f},
+		{quad.color.x, quad.color.y, quad.color.z},
 		});
 
 	m_renderer.push_vert({
@@ -137,7 +137,7 @@ void pb_app::m_draw_quad(obj m_quad)
 		{1.0f, 1.0f},
 		texture_index,
 		local_mat_index,
-		{1.f, 1.f, 1.f},
+		{quad.color.x, quad.color.y, quad.color.z},
 		});
 
 	m_renderer.push_vert({
@@ -145,7 +145,7 @@ void pb_app::m_draw_quad(obj m_quad)
 		{1.0f, 1.0f},
 		texture_index,
 		local_mat_index,
-		{1.f, 1.f, 1.f},
+		{quad.color.x, quad.color.y, quad.color.z},
 		});
 
 	m_renderer.push_vert({
@@ -153,7 +153,7 @@ void pb_app::m_draw_quad(obj m_quad)
 		{0.0f, 1.0f},
 		texture_index,
 		local_mat_index,
-		{1.f, 1.f, 1.f},
+		{quad.color.x, quad.color.y, quad.color.z},
 		});
 
 	m_renderer.push_vert({
@@ -161,34 +161,182 @@ void pb_app::m_draw_quad(obj m_quad)
 		{0.0f, 0.0f},
 		texture_index,
 		local_mat_index,
-		{1.f, 1.f, 1.f},
+		{quad.color.x, quad.color.y, quad.color.z},
 		});
 }
 
-void pb_app::g_draw_circle(obj g_cirlce, unsigned int angle)
+void pb_app::g_draw_quad(obj quad)
 {
-	float local_mat_index = (float)m_renderer.push_local_mat(g_cirlce.get_local_mat());
+	float local_mat_index = (float)m_renderer.push_local_mat(quad.get_local_mat());
+
+	m_renderer.g_push_vert({
+		{-0.5f, -0.5f,  1.f},
+		local_mat_index,
+		{quad.color.x, quad.color.y, quad.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{0.5f, -0.5f,  1.f},
+		local_mat_index,
+		{quad.color.x, quad.color.y, quad.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{0.5f,  0.5f,  1.f},
+		local_mat_index,
+		{quad.color.x, quad.color.y, quad.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{-0.5f,  0.5f,  1.f},
+		local_mat_index,
+		{quad.color.x, quad.color.y, quad.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{-0.5f,  0.5f,  1.f},
+		local_mat_index,
+		{quad.color.x, quad.color.y, quad.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{-0.5f, -0.5f,  1.f},
+		local_mat_index,
+		{quad.color.x, quad.color.y, quad.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{0.5f, 0.5f,  1.f},
+		local_mat_index,
+		{quad.color.x, quad.color.y, quad.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{0.5f,  -0.5f,  1.f},
+		local_mat_index,
+		{quad.color.x, quad.color.y, quad.color.z},
+		});
+}
+
+void pb_app::draw_tri(obj tri)
+{
+	if (m_renderer.get_geometric_mode())
+		g_draw_tri(tri);
+	else
+		m_draw_tri(tri);
+}
+
+void pb_app::m_draw_tri(obj tri)
+{
+	float local_mat_index = (float)m_renderer.push_local_mat(tri.get_local_mat());
+	float texture_index = m_renderer.get_texture_index((float)tri.get_texture_id());
+
+	m_renderer.push_vert({
+		{-0.5f,  0.5f,  1.f},
+		{0.f, 0.f},
+		texture_index,
+		local_mat_index,
+		{tri.color.x, tri.color.y, tri.color.z},
+		});
+
+
+	m_renderer.push_vert({
+		{0.5f,  0.5f,  1.f},
+		{1.f, 0.f},
+		texture_index,
+		local_mat_index,
+		{tri.color.x, tri.color.y, tri.color.z},
+		});
+
+	m_renderer.push_vert({
+		{0.f,  -0.5f,  1.f},
+		{0.5f, 1.f},
+		texture_index,
+		local_mat_index,
+		{tri.color.x, tri.color.y, tri.color.z},
+		});
+}
+
+void pb_app::g_draw_tri(obj tri)
+{
+	float local_mat_index = (float)m_renderer.push_local_mat(tri.get_local_mat());
+
+	m_renderer.g_push_vert({
+		{-0.5f,  0.5f,  1.f},
+		local_mat_index,
+		{tri.color.x, tri.color.y, tri.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{0.5f,  0.5f,  1.f},
+		local_mat_index,
+		{tri.color.x, tri.color.y, tri.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{0.5f,  0.5f,  1.f},
+		local_mat_index,
+		{tri.color.x, tri.color.y, tri.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{0.f,  -0.5f,  1.f},
+		local_mat_index,
+		{tri.color.x, tri.color.y, tri.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{0.f,  -0.5f,  1.f},
+		local_mat_index,
+		{tri.color.x, tri.color.y, tri.color.z},
+		});
+
+	m_renderer.g_push_vert({
+		{-0.5f,  0.5f,  1.f},
+		local_mat_index,
+		{tri.color.x, tri.color.y, tri.color.z},
+		});
+}
+
+void pb_app::draw_circle(obj circle, float angle)
+{
+	if (m_renderer.get_geometric_mode())
+		g_draw_circle(circle, angle);
+	else
+		m_draw_circle(circle, angle);
+}
+
+
+void pb_app::m_draw_circle(obj circle, float angle)
+{
+	// nah
+}
+
+
+void pb_app::g_draw_circle(obj circle, float angle)
+{
+	float local_mat_index = (float)m_renderer.push_local_mat(circle.get_local_mat());
 	float last_x = -1.f;
 	float last_y = -1.f;
 
 	int i = 0;
 	int count = 1;
-	float curr_x = sin(angle * PI / 180);
-	float curr_y = cos(angle * PI / 180);
+	float curr_x = (float)sin(angle * PI / 180);
+	float curr_y = (float)cos(angle * PI / 180);
 
 	while (i <= 360)
 	{
 		if (count % 2 == 0)
 		{
-			curr_x = sin(i * PI / 180);
-			curr_y = cos(i * PI / 180);
+			curr_x = (float)sin(i * PI / 180);
+			curr_y = (float)cos(i * PI / 180);
 		}
 
 		m_renderer.g_push_vert({
 			{curr_x, curr_y,  1.f},
 			local_mat_index,
-			{1.f, 1.f, 1.f},
-		});
+			{circle.color.x, circle.color.y, circle.color.z},
+			});
 
 		i += angle;
 		count++;
@@ -197,60 +345,7 @@ void pb_app::g_draw_circle(obj g_cirlce, unsigned int angle)
 	m_renderer.g_push_vert({
 		{(float)sin(angle * PI / 180), (float)cos(angle * PI / 180), 1.f},
 		local_mat_index,
-		{1.f, 1.f, 1.f},
-	});
-}
-
-void pb_app::g_draw_quad(obj g_quad)
-{
-	float local_mat_index = (float)m_renderer.push_local_mat(g_quad.get_local_mat());
-
-	m_renderer.g_push_vert({
-		{-0.5f, -0.5f,  1.f},
-		local_mat_index,
-		{1.f, 1.f, 1.f},
-		});
-
-	m_renderer.g_push_vert({
-		{0.5f, -0.5f,  1.f},
-		local_mat_index,
-		{1.f, 1.f, 1.f},
-		});
-
-	m_renderer.g_push_vert({
-		{0.5f,  0.5f,  1.f},
-		local_mat_index,
-		{1.f, 1.f, 1.f},
-		});
-
-	m_renderer.g_push_vert({
-		{-0.5f,  0.5f,  1.f},
-		local_mat_index,
-		{1.f, 1.f, 1.f},
-		});
-
-	m_renderer.g_push_vert({
-		{-0.5f,  0.5f,  1.f},
-		local_mat_index,
-		{1.f, 1.f, 1.f},
-		});
-
-	m_renderer.g_push_vert({
-		{-0.5f, -0.5f,  1.f},
-		local_mat_index,
-		{1.f, 1.f, 1.f},
-		});
-
-	m_renderer.g_push_vert({
-		{0.5f, 0.5f,  1.f},
-		local_mat_index,
-		{1.f, 1.f, 1.f},
-		});
-
-	m_renderer.g_push_vert({
-		{0.5f,  -0.5f,  1.f},
-		local_mat_index,
-		{1.f, 1.f, 1.f},
+		{circle.color.x, circle.color.y, circle.color.z},
 		});
 }
 

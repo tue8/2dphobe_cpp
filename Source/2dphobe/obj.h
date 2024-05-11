@@ -9,6 +9,7 @@ private:
 public:
     glm::vec3 pos;
     glm::vec3 size;
+    glm::vec3 color;
 
     obj();
     void load_texture(unsigned int id);

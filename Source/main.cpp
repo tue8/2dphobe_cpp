@@ -28,9 +28,10 @@ std::string get_exe_path()
 class app : public pb_app
 {
 private:
-    unsigned int quad_texture;
+    unsigned int box_texture;
     obj *quads;
-    obj g_quad;
+    obj circle;
+    obj tri;
 public:
     init_pb_app(app);
 
@@ -40,12 +41,16 @@ public:
         path = path.substr(0, path.length() - strlen("Binary"));
         path.append("Data\\Textures\\box.png");
 
-        if (!load_texture(quad_texture, path.c_str()))
+        if (!load_texture(box_texture, path.c_str()))
             end();
 
-        g_quad.size = glm::vec3(QUAD_SIZE, QUAD_SIZE, 0.f);
-        g_quad.pos = glm::vec3(30.f, 30.f, 0.f);
-        g_quad.load_texture(quad_texture);
+        circle.size = glm::vec3(QUAD_SIZE, QUAD_SIZE, 0.f);
+        circle.pos = glm::vec3(50.f, 50.f, 0.f);
+        circle.load_texture(box_texture);
+
+        tri.size = glm::vec3(QUAD_SIZE * 2, QUAD_SIZE * 2, 0.f);
+        tri.pos = glm::vec3(250.f, 50.f, 0.f);
+        tri.load_texture(box_texture);
 
         quads = new obj[QUAD_COUNT];
 
@@ -56,7 +61,7 @@ public:
             {
                 quads[i].size = glm::vec3(QUAD_SIZE, QUAD_SIZE, 0.f);
                 quads[i].pos = glm::vec3(j, k, 0.f);
-                quads[i].load_texture(quad_texture);
+                quads[i].load_texture(box_texture);
                 i++;
             }
         }
@@ -70,7 +75,8 @@ public:
         {
             draw_quad(quads[i]);
         }
-        g_draw_circle(g_quad, 10);
+        draw_circle(circle, 10);
+        draw_tri(tri);
     }
 
     void cleanup()
