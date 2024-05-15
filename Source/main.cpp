@@ -13,7 +13,7 @@
 #include "2dphobe/pb_app.h"
 
 #define WIN_WIDTH 800
-#define WIN_HEIGHT 600
+#define WIN_HEIGHT 800
 #define QUAD_SIZE 100
 #define QUAD_COUNT (WIN_WIDTH * WIN_HEIGHT) / (QUAD_SIZE * QUAD_SIZE)
 

@@ -64,6 +64,7 @@ private:
     unsigned int height;
 
     glm::vec3 cam_view_pos;
+    float zoom_value;
 
     simple_arr<glm::mat4> local_mats;
 public:
@@ -76,6 +77,7 @@ public:
     float get_texture_index(float texure_id);
     int push_local_mat(const glm::mat4 &local_mat);
     glm::vec3& get_view_pos();
+    void set_zoom(float zoom);
     bool get_geometric_mode();
     void set_geometric_mode(bool g);
     void set_geometric_mode_nocheck(bool g);

@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #define QUAD_VERT 6
-#define MAX_QUAD 1000
+#define MAX_QUAD 500
 
 void renderer::init_vao()
 {
@@ -142,7 +142,7 @@ void renderer::init(unsigned int width, unsigned int height)
     g_init_vao();
     init_ssbo();
 
-    cam_view_pos = glm::vec3(50.f, 50.f, 0.f);
+    cam_view_pos = glm::vec3(50.f, 50.f, 1.f);
 }
 
 void renderer::set_geometric_mode_nocheck(bool g)
@@ -190,17 +190,21 @@ glm::vec3 &renderer::get_view_pos()
     return cam_view_pos;
 }
 
+void renderer::set_zoom(float zoom)
+{
+    zoom_value = zoom;
+}
+
 void renderer::flush()
 {
     memset(vertices.arr, 0, vertices.count * sizeof(vertex));
     memset(textures, 0, texture_count * sizeof(unsigned int));
-    vertices.count = 0;
-    texture_count = 0;
-
     memset(g_vertices.arr, 0, g_vertices.count * sizeof(g_vertex));
-    g_vertices.count = 0;
     memset(local_mats.arr, 0, local_mats.count * sizeof(glm::mat4));
 
+    vertices.count = 0;
+    texture_count = 0;
+    g_vertices.count = 0;
     local_mats.count = 0;
 }
 
@@ -252,11 +256,19 @@ void renderer::finalize_mvp(shader &shader)
 {
     shader.bind();
     glm::mat4 view = glm::mat4(1.f),
-              proj = glm::mat4(1.f);
+              proj = glm::mat4(1.f),
+              zoom = glm::mat4(1.f);
 
     view = glm::translate(view, cam_view_pos);
-    proj = glm::ortho(0.f, (float)width, (float)height, 0.f, -1.f, 1.f);
 
+    float zoom_point_x = width / 2.f;
+    float zoom_point_y = height / 2.f;
+
+    float left = (0 - zoom_point_x) / zoom_value + zoom_point_x;
+    float right = (width - zoom_point_x) / zoom_value + zoom_point_x;
+    float bottom = (height - zoom_point_y) / zoom_value + zoom_point_y;
+    float top = (0 - zoom_point_y) / zoom_value + zoom_point_y;
+    proj = glm::ortho(left, right, bottom, top, -1.f, 1.f);
     shader.set_mat4("view", view);
     shader.set_mat4("proj", proj);
     shader.unbind();

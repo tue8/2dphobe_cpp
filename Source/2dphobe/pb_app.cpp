@@ -6,8 +6,12 @@
 #include "stb_image.h"
 #include <iostream>
 #include <sstream>
+#include <glm/gtc/matrix_transform.hpp>
 
 #define PI 3.14159265
+
+float cam_scroll_offset = 0;
+
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
@@ -50,6 +54,7 @@ pb_app::pb_app(unsigned int width,
 	created = true;
 
 	glfwSwapInterval(1);
+	app_name = std::string(name);
 }
 
 void pb_app::end()
@@ -349,7 +354,17 @@ void pb_app::g_draw_circle(obj circle, float angle)
 		});
 }
 
-void pb_app::debug_cam(float cam_speed, float dt)
+glm::vec3& pb_app::get_cam_pos()
+{
+	return m_renderer.get_view_pos();
+}
+
+void scroll_offset(GLFWwindow* window, double xoffset, double yoffset)
+{
+	cam_scroll_offset += yoffset;
+}
+
+void pb_app::debug_cam(float cam_speed, float zoom_intensity, float dt)
 {
 	static bool hold = false;
 	static glm::vec3 origin;
@@ -364,17 +379,16 @@ void pb_app::debug_cam(float cam_speed, float dt)
 		glm::vec3 diff = origin - cursor_pos;
 		if (prev_diff == diff)
 			origin = glm::vec3(cursor_x, cursor_y, 0.f);
-		m_renderer.get_view_pos() -= diff * dt * cam_speed;
+		get_cam_pos() -= diff * dt * cam_speed;
 		prev_diff = diff;
 		hold = true;
 	}
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
-	{
 		hold = false;
-	}
-}
 
+	m_renderer.set_zoom(1.f + cam_scroll_offset * zoom_intensity);
+}
 
 bool pb_app::run()
 {
@@ -410,12 +424,16 @@ bool pb_app::run()
 
 		glfwPollEvents();
 		glfwGetCursorPos(window, &cursor_x, &cursor_y);
+		glfwSetScrollCallback(window, scroll_offset);
 
-		debug_cam(5.f, delta_time);
+		debug_cam(0.5f, 0.05f, delta_time);
+
+		//if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+		//	__debugbreak();
 
 		process_input();
 		update();
-		glClearColor(0.f, 0.f, 0.8f, 1.0f);
+		glClearColor(1.f, 1.f, 1.f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		render();
 
@@ -423,8 +441,9 @@ bool pb_app::run()
 			m_renderer.set_geometric_mode(false);
 		m_renderer.draw();
 		std::stringstream ss;
-		ss << "FPS: " << fps << " Draw calls: " << m_renderer.draw_call;
+		ss << app_name << " | FPS: " << fps << " Draw calls: " << m_renderer.draw_call;
 		glfwSetWindowTitle(window, ss.str().c_str());
+
 		glfwSwapBuffers(window);
 		m_renderer.draw_call = 0;
 	}
