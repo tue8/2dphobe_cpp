@@ -311,12 +311,64 @@ void pb_app::draw_circle(obj circle, float angle)
 		m_draw_circle(circle, angle);
 }
 
-
 void pb_app::m_draw_circle(obj circle, float angle)
 {
-	// nah
-}
+	float local_mat_index = (float)m_renderer.push_local_mat(circle.get_local_mat());
+	float last_x = -1.f;
+	float last_y = -1.f;
 
+	int i = 0;
+	int count = 1;
+	float curr_x = (float)sin(angle * PI / 180);
+	float curr_y = (float)cos(angle * PI / 180);
+
+	while (i <= 360)
+	{
+		if (count % 2 == 0)
+		{
+			curr_x = (float)sin(i * PI / 180);
+			curr_y = (float)cos(i * PI / 180);
+		}
+
+		m_renderer.push_vert({
+			{curr_x, curr_y,  1.f},
+			{0.f, 0.f},
+			0,
+			local_mat_index,
+			{circle.color.x, circle.color.y, circle.color.z},
+			});
+
+		if (count % 2 == 0)
+		{
+			m_renderer.push_vert({
+				{0.f, 0.f,  1.f},
+				{0.f, 0.f},
+				0,
+				local_mat_index,
+				{circle.color.x, circle.color.y, circle.color.z},
+				});
+		}
+
+		i += angle;
+		count++;
+	}
+
+	m_renderer.push_vert({
+		{(float)sin(angle * PI / 180), (float)cos(angle * PI / 180), 1.f},
+		{0.f, 0.f},
+		0,
+		local_mat_index,
+		{circle.color.x, circle.color.y, circle.color.z},
+		});
+
+	m_renderer.push_vert({
+		{0.f, 0.f,  1.f},
+		{0.f, 0.f},
+		0,
+		local_mat_index,
+		{circle.color.x, circle.color.y, circle.color.z},
+		});
+}
 
 void pb_app::g_draw_circle(obj circle, float angle)
 {
@@ -354,11 +406,6 @@ void pb_app::g_draw_circle(obj circle, float angle)
 		});
 }
 
-glm::vec3& pb_app::get_cam_pos()
-{
-	return m_renderer.get_view_pos();
-}
-
 void scroll_offset(GLFWwindow* window, double xoffset, double yoffset)
 {
 	cam_scroll_offset += yoffset;
@@ -379,7 +426,7 @@ void pb_app::debug_cam(float cam_speed, float zoom_intensity, float dt)
 		glm::vec3 diff = origin - cursor_pos;
 		if (prev_diff == diff)
 			origin = glm::vec3(cursor_x, cursor_y, 0.f);
-		get_cam_pos() -= diff * dt * cam_speed;
+		m_renderer.get_view_pos() -= diff * dt * cam_speed;
 		prev_diff = diff;
 		hold = true;
 	}
@@ -426,10 +473,7 @@ bool pb_app::run()
 		glfwGetCursorPos(window, &cursor_x, &cursor_y);
 		glfwSetScrollCallback(window, scroll_offset);
 
-		debug_cam(0.5f, 0.05f, delta_time);
-
-		//if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-		//	__debugbreak();
+		debug_cam(0.5f, 0.25f, delta_time);
 
 		process_input();
 		update();

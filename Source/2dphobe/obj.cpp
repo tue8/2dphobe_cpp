@@ -15,6 +15,7 @@ obj::obj() : texture_id(0)
 void obj::load_texture(unsigned int id)
 {
     texture_id = id;
+    color = glm::vec3(1.f);
 }
 
 glm::mat4 obj::get_local_mat()

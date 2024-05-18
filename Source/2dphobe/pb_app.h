@@ -31,7 +31,6 @@ public:
     bool load_texture(unsigned int &texture_id, const char *texture_dir) const;
     bool renderer_get_geometric_mode();
     void renderer_set_geometric_mode(bool g);
-    glm::vec3& get_cam_pos();
 private:
     void m_draw_quad(obj quad);
     void g_draw_quad(obj quad);

@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #define QUAD_VERT 6
-#define MAX_QUAD 500
+#define MAX_QUAD 1000
 
 void renderer::init_vao()
 {
@@ -145,11 +145,6 @@ void renderer::init(unsigned int width, unsigned int height)
     cam_view_pos = glm::vec3(50.f, 50.f, 1.f);
 }
 
-void renderer::set_geometric_mode_nocheck(bool g)
-{
-    geometric = g;
-}
-
 void renderer::set_geometric_mode(bool g)
 {
     if (geometric != g)
@@ -264,10 +259,18 @@ void renderer::finalize_mvp(shader &shader)
     float zoom_point_x = width / 2.f;
     float zoom_point_y = height / 2.f;
 
-    float left = (0 - zoom_point_x) / zoom_value + zoom_point_x;
-    float right = (width - zoom_point_x) / zoom_value + zoom_point_x;
-    float bottom = (height - zoom_point_y) / zoom_value + zoom_point_y;
-    float top = (0 - zoom_point_y) / zoom_value + zoom_point_y;
+    static float left = 0.f;
+    static float right = width;
+    static float bottom = height;
+    static float top = 0.f;
+
+    if (zoom_value > 0)
+    {
+        left = (0 - zoom_point_x) / zoom_value + zoom_point_x;
+        right = (width - zoom_point_x) / zoom_value + zoom_point_x;
+        bottom = (height - zoom_point_y) / zoom_value + zoom_point_y;
+        top = (0 - zoom_point_y) / zoom_value + zoom_point_y;
+    }
     proj = glm::ortho(left, right, bottom, top, -1.f, 1.f);
     shader.set_mat4("view", view);
     shader.set_mat4("proj", proj);
