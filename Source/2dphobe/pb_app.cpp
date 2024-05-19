@@ -11,12 +11,26 @@
 #define PI 3.14159265
 
 float cam_scroll_offset = 0;
-
+int keys[1024];
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+	if (key >= 0 && key < 1024)
+	{
+		if (action == GLFW_PRESS)
+			keys[key] = true;
+		else if (action == GLFW_RELEASE)
+			keys[key] = false;
+	}
+}
+
 
 pb_app::pb_app(unsigned int width,
 			   unsigned int height,
@@ -50,11 +64,13 @@ pb_app::pb_app(unsigned int width,
 		created = false;
     }
 
+	glfwSetKeyCallback(window, key_callback);
 	stbi_set_flip_vertically_on_load(true);
 	created = true;
 
 	glfwSwapInterval(1);
 	app_name = std::string(name);
+	debug_cam_on = false;
 }
 
 void pb_app::end()
@@ -411,6 +427,16 @@ void scroll_offset(GLFWwindow* window, double xoffset, double yoffset)
 	cam_scroll_offset += yoffset;
 }
 
+int* pb_app::get_key_input()
+{
+	return key_input;
+}
+
+void pb_app::set_debug_cam(bool dc)
+{
+	debug_cam_on = dc;
+}
+
 void pb_app::debug_cam(float cam_speed, float zoom_intensity, float dt)
 {
 	static bool hold = false;
@@ -469,14 +495,17 @@ bool pb_app::run()
 			last_sec_frame = curr_frame;
 		}
 
+		update(delta_time);
+
 		glfwPollEvents();
+		memcpy(key_input, keys, sizeof(key_input));
 		glfwGetCursorPos(window, &cursor_x, &cursor_y);
 		glfwSetScrollCallback(window, scroll_offset);
+		process_input(key_input, delta_time);
 
-		debug_cam(0.5f, 0.25f, delta_time);
+		if (debug_cam_on)
+			debug_cam(2.f, 0.25f, delta_time);
 
-		process_input();
-		update();
 		glClearColor(1.f, 1.f, 1.f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		render();

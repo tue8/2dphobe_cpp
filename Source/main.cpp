@@ -46,10 +46,12 @@ public:
 
         circle.size = glm::vec3(QUAD_SIZE, QUAD_SIZE, 0.f);
         circle.pos = glm::vec3(50.f, 50.f, 0.f);
+        //circle.color = glm::vec3(1.f);
         //circle.load_texture(box_texture);
 
         tri.size = glm::vec3(QUAD_SIZE * 2, QUAD_SIZE * 2, 0.f);
         tri.pos = glm::vec3(250.f, 50.f, 0.f);
+        //tri.color = glm::vec3(1.f);
         //tri.load_texture(box_texture);
 
         quads = new obj[QUAD_COUNT];
@@ -62,10 +64,30 @@ public:
                 quads[i].size = glm::vec3(QUAD_SIZE, QUAD_SIZE, 0.f);
                 quads[i].pos = glm::vec3(j, k, 0.f);
                 //quads[i].load_texture(box_texture);
+                //quads[i].color = glm::vec3(1.f);
                 i++;
             }
         }
         
+        set_debug_cam(true);
+    }
+
+    void process_input(int* key_input, float dt)
+    {
+        float x = 0;
+        float y = 0;
+        float speed = 100.f * dt;
+
+        if (key_input[GLFW_KEY_W])
+            y -= speed;
+        if (key_input[GLFW_KEY_A])
+            x -= speed;
+        if (key_input[GLFW_KEY_S])
+            y += speed;
+        if (key_input[GLFW_KEY_D])
+            x += speed;
+
+        circle.pos += glm::vec3(x, y, 0.f);
     }
 
     void render()

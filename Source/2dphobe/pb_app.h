@@ -13,9 +13,10 @@ class pb_app
 private:
     bool end_signal;
     bool created;
+    bool debug_cam_on;
     double fps;
     float delta_time;
-    int keys[1024];
+    int key_input[1024];
     std::string app_name;
     unsigned int width, height;
     double cursor_x, cursor_y;
@@ -29,8 +30,10 @@ public:
     void draw_tri(obj tri);
     void draw_circle(obj circle, float angle);
     bool load_texture(unsigned int &texture_id, const char *texture_dir) const;
+    void set_debug_cam(bool dc);
     bool renderer_get_geometric_mode();
     void renderer_set_geometric_mode(bool g);
+    int* get_key_input();
 private:
     void m_draw_quad(obj quad);
     void g_draw_quad(obj quad);
@@ -41,8 +44,8 @@ private:
     void debug_cam(float sens, float zoom_intensity, float dt);
 public:
     virtual void init() {}
-    virtual void process_input() {}
-    virtual void update() {}
+    virtual void update(float dt) {}
+    virtual void process_input(int *key_input, float dt) {}
     virtual void render() {}
     virtual void cleanup() {}
 };
