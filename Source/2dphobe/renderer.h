@@ -1,6 +1,6 @@
 #pragma once
 #include "shader.h"
-
+#include <vector>
 #include <glm/glm.hpp>
 
 struct vec2
@@ -30,13 +30,6 @@ struct g_vertex
     struct vec3 color;
 };
 
-template <typename T>
-struct simple_arr
-{
-    T *arr;
-    unsigned int count;
-};
-
 class renderer
 {
 private:
@@ -54,8 +47,8 @@ private:
     unsigned int g_vao;
     unsigned int g_vbo;
 
-    simple_arr<vertex> vertices;
-    simple_arr<g_vertex> g_vertices;
+    std::vector<vertex> vertices;
+    std::vector<g_vertex> g_vertices;
 
     unsigned int *textures;
     unsigned int texture_count;
@@ -64,7 +57,7 @@ private:
     shader m_shader;
     shader g_shader;
 
-    simple_arr<glm::mat4> local_mats;
+    std::vector<glm::mat4> local_mats;
 public:
     unsigned int draw_call;
     ~renderer();

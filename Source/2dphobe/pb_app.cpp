@@ -37,7 +37,8 @@ pb_app::pb_app(unsigned int width,
                const char *name) : width(width), height(height),
 								   delta_time(0.f), fps(0),
 								   end_signal(false),
-								   cursor_x(0), cursor_y(0)
+								   cursor_x(0), cursor_y(0),
+								   app_name(std::string(name)), debug_cam_on(false)
 {
 	created = true;
 
@@ -66,11 +67,9 @@ pb_app::pb_app(unsigned int width,
 
 	glfwSetKeyCallback(window, key_callback);
 	stbi_set_flip_vertically_on_load(true);
-	created = true;
 
 	glfwSwapInterval(1);
-	app_name = std::string(name);
-	debug_cam_on = false;
+	created = true;
 }
 
 void pb_app::end()
@@ -113,6 +112,108 @@ bool pb_app::load_texture(unsigned int &texture_id, const char *texture_dir) con
 	stbi_image_free(data);
 	return true;
 }
+
+void scroll_offset(GLFWwindow* window, double xoffset, double yoffset)
+{
+	cam_scroll_offset += yoffset;
+}
+
+void pb_app::set_debug_cam(bool dc)
+{
+	debug_cam_on = dc;
+}
+
+void pb_app::debug_cam(float cam_speed, float zoom_intensity, float dt)
+{
+	static bool hold = false;
+	static glm::vec3 origin;
+	static glm::vec3 prev_diff = glm::vec3(0.f);
+
+	if (!hold)
+		origin = glm::vec3(cursor_x, cursor_y, 0.f);
+
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	{
+		glm::vec3 cursor_pos(cursor_x, cursor_y, 0.f);
+		glm::vec3 diff = origin - cursor_pos;
+		if (prev_diff == diff)
+			origin = glm::vec3(cursor_x, cursor_y, 0.f);
+		m_renderer.get_view_pos() -= diff * cam_speed * dt;
+		prev_diff = diff;
+		hold = true;
+	}
+
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+		hold = false;
+
+	m_renderer.set_zoom(1.f + cam_scroll_offset * zoom_intensity);
+}
+
+bool pb_app::run()
+{
+	float last_frame = 0.f;
+	float last_sec_frame = (float)glfwGetTime();
+	int frame = 0;
+
+	if (!created)
+	{
+		std::cout << "Couldn't run app since it was not"
+					 "successfully created." << std::endl;
+		return false;
+	}
+
+	m_renderer.init(width, height);
+	init();
+
+	while (!glfwWindowShouldClose(window) && !end_signal)
+	{
+		float curr_frame = (float)glfwGetTime();
+		frame++;
+
+		delta_time = curr_frame - last_frame;
+		last_frame = curr_frame;
+
+		if (curr_frame - last_sec_frame >= 1.f)
+		{
+			fps = double(frame) / (curr_frame - last_sec_frame);
+			frame = 0;
+			last_sec_frame = curr_frame;
+		}
+
+		update(delta_time);
+
+		glfwPollEvents();
+		memcpy(key_input, keys, sizeof(key_input));
+		glfwGetCursorPos(window, &cursor_x, &cursor_y);
+		glfwSetScrollCallback(window, scroll_offset);
+		process_input(key_input, delta_time);
+
+		if (debug_cam_on)
+			debug_cam(2.f, 0.25f, delta_time);
+
+		glClearColor(0.f, 0.f, 0.f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		render();
+
+		if (m_renderer.get_geometric_mode())
+			m_renderer.set_geometric_mode(false);
+		m_renderer.draw();
+		std::stringstream ss;
+		ss << app_name << " | FPS: " << fps << " Draw calls: " << m_renderer.draw_call;
+		glfwSetWindowTitle(window, ss.str().c_str());
+
+		glfwSwapBuffers(window);
+		m_renderer.draw_call = 0;
+	}
+
+	end();
+	return true;
+}
+
+
+/*
+* draw functions
+*/
 
 void pb_app::renderer_set_geometric_mode(bool g)
 {
@@ -420,107 +521,4 @@ void pb_app::g_draw_circle(obj circle, float angle)
 		local_mat_index,
 		{circle.color.x, circle.color.y, circle.color.z},
 		});
-}
-
-void scroll_offset(GLFWwindow* window, double xoffset, double yoffset)
-{
-	cam_scroll_offset += yoffset;
-}
-
-int* pb_app::get_key_input()
-{
-	return key_input;
-}
-
-void pb_app::set_debug_cam(bool dc)
-{
-	debug_cam_on = dc;
-}
-
-void pb_app::debug_cam(float cam_speed, float zoom_intensity, float dt)
-{
-	static bool hold = false;
-	static glm::vec3 origin;
-	static glm::vec3 prev_diff = glm::vec3(0.f);
-
-	if (!hold)
-		origin = glm::vec3(cursor_x, cursor_y, 0.f);
-
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-	{
-		glm::vec3 cursor_pos(cursor_x, cursor_y, 0.f);
-		glm::vec3 diff = origin - cursor_pos;
-		if (prev_diff == diff)
-			origin = glm::vec3(cursor_x, cursor_y, 0.f);
-		m_renderer.get_view_pos() -= diff * dt * cam_speed;
-		prev_diff = diff;
-		hold = true;
-	}
-
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
-		hold = false;
-
-	m_renderer.set_zoom(1.f + cam_scroll_offset * zoom_intensity);
-}
-
-bool pb_app::run()
-{
-	float last_frame = 0.f;
-	float last_sec_frame = (float)glfwGetTime();
-	int frame = 0;
-
-	if (!created)
-	{
-		std::cout << "Couldn't run app since it was not"
-					 "successfully created." << std::endl;
-		return false;
-	}
-
-	m_renderer.init(width, height);
-	init();
-
-
-	while (!glfwWindowShouldClose(window) && !end_signal)
-	{
-		float curr_frame = (float)glfwGetTime();
-		frame++;
-
-		delta_time = curr_frame - last_frame;
-		last_frame = curr_frame;
-
-		if (curr_frame - last_sec_frame >= 1.f)
-		{
-			fps = double(frame) / (curr_frame - last_sec_frame);
-			frame = 0;
-			last_sec_frame = curr_frame;
-		}
-
-		update(delta_time);
-
-		glfwPollEvents();
-		memcpy(key_input, keys, sizeof(key_input));
-		glfwGetCursorPos(window, &cursor_x, &cursor_y);
-		glfwSetScrollCallback(window, scroll_offset);
-		process_input(key_input, delta_time);
-
-		if (debug_cam_on)
-			debug_cam(2.f, 0.25f, delta_time);
-
-		glClearColor(1.f, 1.f, 1.f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		render();
-
-		if (m_renderer.get_geometric_mode())
-			m_renderer.set_geometric_mode(false);
-		m_renderer.draw();
-		std::stringstream ss;
-		ss << app_name << " | FPS: " << fps << " Draw calls: " << m_renderer.draw_call;
-		glfwSetWindowTitle(window, ss.str().c_str());
-
-		glfwSwapBuffers(window);
-		m_renderer.draw_call = 0;
-	}
-
-	end();
-	return true;
 }

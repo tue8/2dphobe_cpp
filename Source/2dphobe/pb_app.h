@@ -33,7 +33,6 @@ public:
     void set_debug_cam(bool dc);
     bool renderer_get_geometric_mode();
     void renderer_set_geometric_mode(bool g);
-    int* get_key_input();
 private:
     void m_draw_quad(obj quad);
     void g_draw_quad(obj quad);
