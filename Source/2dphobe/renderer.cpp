@@ -138,7 +138,9 @@ void renderer::init(unsigned int width, unsigned int height)
     g_init_vao();
     init_ssbo();
 
-    cam_view_pos = glm::vec3(50.f, 50.f, 1.f);
+    cam_view_pos = glm::vec3(0.f, 0.f, 1.f);
+    m_view_area.pos = glm::vec3(1.f);
+    m_view_area.size = glm::vec3(1.f);
 }
 
 void renderer::set_geometric_mode(bool g)
@@ -176,9 +178,14 @@ int renderer::push_local_mat(const glm::mat4 &local_mat)
     return local_mats.size() - 1;
 }
 
-glm::vec3 &renderer::get_view_pos()
+glm::vec3& renderer::get_view_pos()
 {
     return cam_view_pos;
+}
+
+view_area &renderer::get_view_area()
+{
+    return m_view_area;
 }
 
 void renderer::set_zoom(float zoom)
@@ -265,6 +272,11 @@ void renderer::finalize_mvp(shader &shader)
         bottom = (height - zoom_point_y) / zoom_value + zoom_point_y;
         top = (0 - zoom_point_y) / zoom_value + zoom_point_y;
     }
+
+    m_view_area.pos.x = left - cam_view_pos.x;
+    m_view_area.pos.y = top - cam_view_pos.y;
+    m_view_area.size.x = (right - cam_view_pos.x) - m_view_area.pos.x;
+    m_view_area.size.y = (bottom - cam_view_pos.y) - m_view_area.pos.y;
     proj = glm::ortho(left, right, bottom, top, -1.f, 1.f);
     shader.set_mat4("view", view);
     shader.set_mat4("proj", proj);

@@ -13,10 +13,9 @@ class pb_app
 private:
     bool end_signal;
     bool created;
-    bool debug_cam_on;
+    bool b_drag_zoom;
     double fps;
     float delta_time;
-    int key_input[1024];
     std::string app_name;
     unsigned int width, height;
     double cursor_x, cursor_y;
@@ -26,21 +25,20 @@ public:
     pb_app(unsigned int width, unsigned int height, const char *name);
     bool run();
     void end();
-    void draw_quad(obj quad);
-    void draw_tri(obj tri);
-    void draw_circle(obj circle, float angle);
+    void draw_quad(obj &quad);
+    void draw_tri(obj &tri);
+    void draw_circle(obj &circle, float angle);
     bool load_texture(unsigned int &texture_id, const char *texture_dir) const;
-    void set_debug_cam(bool dc);
-    bool renderer_get_geometric_mode();
-    void renderer_set_geometric_mode(bool g);
+    void set_drag_zoom(bool dc);
+    renderer& get_renderer();
 private:
-    void m_draw_quad(obj quad);
-    void g_draw_quad(obj quad);
-    void m_draw_circle(obj circle, float angle);
-    void g_draw_circle(obj circle, float angle);
-    void m_draw_tri(obj tri);
-    void g_draw_tri(obj tri);
-    void debug_cam(float sens, float zoom_intensity, float dt);
+    void m_draw_quad(obj &quad);
+    void g_draw_quad(obj &quad);
+    void m_draw_circle(obj &circle, float angle);
+    void g_draw_circle(obj &circle, float angle);
+    void m_draw_tri(obj &tri);
+    void g_draw_tri(obj &tri);
+    void drag_zoom(float zoom_intensity);
 public:
     virtual void init() {}
     virtual void update(float dt) {}

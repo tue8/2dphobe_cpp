@@ -30,6 +30,12 @@ struct g_vertex
     struct vec3 color;
 };
 
+struct view_area
+{
+    glm::vec3 pos;
+    glm::vec3 size;
+};
+
 class renderer
 {
 private:
@@ -37,6 +43,7 @@ private:
     unsigned int height;
     bool geometric;
     glm::vec3 cam_view_pos;
+    view_area m_view_area;
     float zoom_value;
 
     unsigned int ssbo;
@@ -60,6 +67,7 @@ private:
     std::vector<glm::mat4> local_mats;
 public:
     unsigned int draw_call;
+    glm::vec3 cam_drag_offset;
     ~renderer();
     void init(unsigned int width, unsigned int height);
     void draw();
@@ -69,6 +77,7 @@ public:
     int push_local_mat(const glm::mat4 &local_mat);
 
     glm::vec3& get_view_pos();
+    view_area& get_view_area();
     void set_zoom(float zoom);
 
     bool get_geometric_mode();

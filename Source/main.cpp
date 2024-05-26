@@ -66,7 +66,7 @@ public:
         }
         
         std::cout << "QUAD COUNT: " << quads.size() << std::endl;
-        set_debug_cam(true);
+        set_drag_zoom(true);
     }
 
     void process_input(int* key_input, float dt)
@@ -85,17 +85,33 @@ public:
             x += speed;
 
         if (key_input[GLFW_KEY_E])
-            renderer_set_geometric_mode(!renderer_get_geometric_mode());
+        {
+            renderer& m_renderer = get_renderer();
+            m_renderer.set_geometric_mode(!m_renderer.get_geometric_mode());
+        }
 
         circle.pos += glm::vec3(x, y, 0.f);
     }
 
     void render()
     {
-        for (const obj& quad : quads)
-            draw_quad(quad);
+        renderer& m_renderer = get_renderer();
+        view_area m_view_area = m_renderer.get_view_area();
+        obj view_area_obj;
+        view_area_obj.pos = m_view_area.pos;
+        view_area_obj.size = m_view_area.size;
 
-        draw_tri(tri);
+        int count = 0;
+        for (obj& quad : quads)
+        {
+            if (view_area_obj.collide_with(quad))
+            {
+                draw_quad(quad);
+                count++;
+            }
+        }
+        std::cout << count << std::endl;
+
         draw_circle(circle, 10);
     }
 };

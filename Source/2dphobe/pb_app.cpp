@@ -20,8 +20,6 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
 	if (key >= 0 && key < 1024)
 	{
 		if (action == GLFW_PRESS)
@@ -38,7 +36,7 @@ pb_app::pb_app(unsigned int width,
 								   delta_time(0.f), fps(0),
 								   end_signal(false),
 								   cursor_x(0), cursor_y(0),
-								   app_name(std::string(name)), debug_cam_on(false)
+								   app_name(std::string(name)), b_drag_zoom(false)
 {
 	created = true;
 
@@ -68,7 +66,6 @@ pb_app::pb_app(unsigned int width,
 	glfwSetKeyCallback(window, key_callback);
 	stbi_set_flip_vertically_on_load(true);
 
-	glfwSwapInterval(1);
 	created = true;
 }
 
@@ -118,35 +115,39 @@ void scroll_offset(GLFWwindow* window, double xoffset, double yoffset)
 	cam_scroll_offset += yoffset;
 }
 
-void pb_app::set_debug_cam(bool dc)
+renderer& pb_app::get_renderer()
 {
-	debug_cam_on = dc;
+	return m_renderer;
 }
 
-void pb_app::debug_cam(float cam_speed, float zoom_intensity, float dt)
+void pb_app::set_drag_zoom(bool dz)
+{
+	b_drag_zoom = dz;
+}
+
+void pb_app::drag_zoom(float zoom_intensity)
 {
 	static bool hold = false;
 	static glm::vec3 origin;
-	static glm::vec3 prev_diff = glm::vec3(0.f);
+	float zoom_value = 1.f + cam_scroll_offset * zoom_intensity;
+	m_renderer.set_zoom(zoom_value);
 
 	if (!hold)
+	{
 		origin = glm::vec3(cursor_x, cursor_y, 0.f);
+	}
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 	{
-		glm::vec3 cursor_pos(cursor_x, cursor_y, 0.f);
-		glm::vec3 diff = origin - cursor_pos;
-		if (prev_diff == diff)
-			origin = glm::vec3(cursor_x, cursor_y, 0.f);
-		m_renderer.get_view_pos() -= diff * cam_speed * dt;
-		prev_diff = diff;
 		hold = true;
+		glm::vec3 cursor_pos(cursor_x, cursor_y, 0.f);
+		m_renderer.cam_drag_offset = cursor_pos - origin;
+		m_renderer.get_view_pos() += m_renderer.cam_drag_offset / zoom_value;
+		origin = glm::vec3(cursor_x, cursor_y, 0.f);
 	}
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
 		hold = false;
-
-	m_renderer.set_zoom(1.f + cam_scroll_offset * zoom_intensity);
 }
 
 bool pb_app::run()
@@ -183,20 +184,17 @@ bool pb_app::run()
 		update(delta_time);
 
 		glfwPollEvents();
-		memcpy(key_input, keys, sizeof(key_input));
 		glfwGetCursorPos(window, &cursor_x, &cursor_y);
 		glfwSetScrollCallback(window, scroll_offset);
-		process_input(key_input, delta_time);
+		process_input(keys, delta_time);
 
-		if (debug_cam_on)
-			debug_cam(2.f, 0.25f, delta_time);
+		if (b_drag_zoom)
+			drag_zoom(0.25f);
 
 		glClearColor(0.f, 0.f, 0.f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		render();
 
-		if (m_renderer.get_geometric_mode())
-			m_renderer.set_geometric_mode(false);
 		m_renderer.draw();
 		std::stringstream ss;
 		ss << app_name << " | FPS: " << fps << " Draw calls: " << m_renderer.draw_call;
@@ -215,17 +213,7 @@ bool pb_app::run()
 * draw functions
 */
 
-void pb_app::renderer_set_geometric_mode(bool g)
-{
-	m_renderer.set_geometric_mode(g);
-}
-
-bool pb_app::renderer_get_geometric_mode()
-{
-	return m_renderer.get_geometric_mode();
-}
-
-void pb_app::draw_quad(obj quad)
+void pb_app::draw_quad(obj &quad)
 {
 	if (m_renderer.get_geometric_mode())
 		g_draw_quad(quad);
@@ -233,7 +221,7 @@ void pb_app::draw_quad(obj quad)
 		m_draw_quad(quad);
 }
 
-void pb_app::m_draw_quad(obj quad)
+void pb_app::m_draw_quad(obj &quad)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(quad.get_local_mat());
 	float texture_index = m_renderer.get_texture_index((float)quad.get_texture_id());
@@ -287,7 +275,7 @@ void pb_app::m_draw_quad(obj quad)
 		});
 }
 
-void pb_app::g_draw_quad(obj quad)
+void pb_app::g_draw_quad(obj &quad)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(quad.get_local_mat());
 
@@ -340,7 +328,7 @@ void pb_app::g_draw_quad(obj quad)
 		});
 }
 
-void pb_app::draw_tri(obj tri)
+void pb_app::draw_tri(obj &tri)
 {
 	if (m_renderer.get_geometric_mode())
 		g_draw_tri(tri);
@@ -348,7 +336,7 @@ void pb_app::draw_tri(obj tri)
 		m_draw_tri(tri);
 }
 
-void pb_app::m_draw_tri(obj tri)
+void pb_app::m_draw_tri(obj &tri)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(tri.get_local_mat());
 	float texture_index = m_renderer.get_texture_index((float)tri.get_texture_id());
@@ -379,7 +367,7 @@ void pb_app::m_draw_tri(obj tri)
 		});
 }
 
-void pb_app::g_draw_tri(obj tri)
+void pb_app::g_draw_tri(obj &tri)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(tri.get_local_mat());
 
@@ -420,7 +408,7 @@ void pb_app::g_draw_tri(obj tri)
 		});
 }
 
-void pb_app::draw_circle(obj circle, float angle)
+void pb_app::draw_circle(obj &circle, float angle)
 {
 	if (m_renderer.get_geometric_mode())
 		g_draw_circle(circle, angle);
@@ -428,7 +416,7 @@ void pb_app::draw_circle(obj circle, float angle)
 		m_draw_circle(circle, angle);
 }
 
-void pb_app::m_draw_circle(obj circle, float angle)
+void pb_app::m_draw_circle(obj &circle, float angle)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(circle.get_local_mat());
 	float last_x = -1.f;
@@ -487,7 +475,7 @@ void pb_app::m_draw_circle(obj circle, float angle)
 		});
 }
 
-void pb_app::g_draw_circle(obj circle, float angle)
+void pb_app::g_draw_circle(obj &circle, float angle)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(circle.get_local_mat());
 	float last_x = -1.f;
