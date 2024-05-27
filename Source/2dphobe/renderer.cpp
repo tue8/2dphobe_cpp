@@ -4,16 +4,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #define QUAD_VERT 6
-#define G_QUAD_VERT 8
 #define MAX_QUAD 3000
 
 void renderer::init_vao()
 {
-    glGenVertexArrays(1, &m_vao);
-    glGenBuffers(1, &m_vbo);
-    glBindVertexArray(m_vao);
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glBindVertexArray(vao);
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER,
         sizeof(vertex) * QUAD_VERT * MAX_QUAD,
         nullptr,
@@ -63,46 +62,6 @@ void renderer::init_vao()
     glBindVertexArray(0);
 }
 
-void renderer::g_init_vao()
-{
-    glGenVertexArrays(1, &g_vao);
-    glGenBuffers(1, &g_vbo);
-    glBindVertexArray(g_vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, g_vbo);
-    glBufferData(GL_ARRAY_BUFFER,
-        sizeof(g_vertex) * G_QUAD_VERT * MAX_QUAD,
-        nullptr,
-        GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(g_vertex),
-        (void *)offsetof(g_vertex, ndc));
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1,
-        1,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(g_vertex),
-        (void *)offsetof(g_vertex, local_mat_index));
-
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(g_vertex),
-        (void *)offsetof(g_vertex, color));
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
-
 void renderer::init_ssbo()
 {
     glGenBuffers(1, &ssbo);
@@ -121,38 +80,26 @@ void renderer::init(unsigned int width, unsigned int height)
     this->width = width;
     this->height = height;
 
-    geometric = false;
-
     texture_count = 0;
-
-    draw_call = 0;
+    screen_texture_count = 0;
 
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_textures);
 
-    m_shader.init(max_textures);
-    g_shader.init(0);
+    m_shader.init(DEFAULT_SHADER, max_textures);
+    screen_shader.init(SCREEN_SHADER, max_textures);
 
     textures = new unsigned int[max_textures];
+    screen_textures = new unsigned int[max_textures];
 
     init_vao();
-    g_init_vao();
     init_ssbo();
 
     cam_view_pos = glm::vec3(0.f, 0.f, 1.f);
     m_view_area.pos = glm::vec3(1.f);
     m_view_area.size = glm::vec3(1.f);
-}
 
-void renderer::set_geometric_mode(bool g)
-{
-    if (geometric != g)
-        draw();
-    geometric = g;
-}
-
-bool renderer::get_geometric_mode()
-{
-    return geometric;
+    zoom_point_x = width / 2;
+    zoom_point_y = height / 2;
 }
 
 /*
@@ -164,9 +111,9 @@ void renderer::push_vert(const vertex &vert)
     vertices.push_back(vert);
 }
 
-void renderer::g_push_vert(const g_vertex &vert)
+void renderer::push_screen_vert(const vertex& vert)
 {
-    g_vertices.push_back(vert);
+    screen_vertices.push_back(vert);
 }
 
 
@@ -176,6 +123,14 @@ int renderer::push_local_mat(const glm::mat4 &local_mat)
         draw();
     local_mats.push_back(local_mat);
     return local_mats.size() - 1;
+}
+
+int renderer::push_screen_mat(const glm::mat4& screen_mat)
+{
+    if (screen_mats.size() + 1 >= MAX_QUAD)
+        draw();
+    screen_mats.push_back(screen_mat);
+    return screen_mats.size() - 1;
 }
 
 glm::vec3& renderer::get_view_pos()
@@ -188,22 +143,26 @@ view_area &renderer::get_view_area()
     return m_view_area;
 }
 
+void renderer::set_zoom_point(float x, float y)
+{
+    zoom_point_x = x;
+    zoom_point_y = y;
+}
+
 void renderer::set_zoom(float zoom)
 {
     zoom_value = zoom;
 }
 
-void renderer::flush()
+void renderer::flush(std::vector<vertex>& vert, std::vector<glm::mat4>& mats,
+                     unsigned int*& t_arr, unsigned int& t_count)
 {
-    if (!vertices.empty()) vertices.clear();
-    if (!g_vertices.empty()) g_vertices.clear();
-    if (!local_mats.empty()) local_mats.clear();
-
-    if (texture_count != 0)
-        memset(textures, 0, texture_count * sizeof(unsigned int));
-    texture_count = 0;
+    if (!vert.empty()) vert.clear();
+    if (!mats.empty()) mats.clear();
+    if (t_count != 0)
+        memset(t_arr, 0, t_count * sizeof(unsigned int));
+    t_count = 0;
 }
-
 
 float renderer::get_texture_index(float texure_id)
 {
@@ -231,20 +190,45 @@ float renderer::get_texture_index(float texure_id)
     return tex_index;
 }
 
+float renderer::get_screen_texture_index(float texure_id)
+{
+    float tex_index;
+    bool tex_find = false;
 
-void renderer::finalize_samplers()
+    for (int i = 0; i < screen_texture_count; i++)
+    {
+        if (screen_textures[i] == texure_id)
+        {
+            tex_index = (float)i;
+            tex_find = true;
+            break;
+        }
+    }
+
+    if (!tex_find)
+    {
+        if (screen_texture_count > max_textures - 1)
+            draw();
+        screen_textures[screen_texture_count] = (unsigned int)texure_id;
+        tex_index = (float)screen_texture_count++;
+    }
+
+    return tex_index;
+}
+
+void renderer::finalize_samplers(shader &shader)
 {
     int *samplers = new int[max_textures];
 
     for (int i = 0; i < max_textures; i++)
         samplers[i] = i;
 
-    m_shader.bind();
-    int location = glGetUniformLocation(m_shader.get_id(),
+    shader.bind();
+    int location = glGetUniformLocation(shader.get_id(),
                                         "texs");
 
     glUniform1iv(location, max_textures, samplers);
-    m_shader.unbind();
+    shader.unbind();
     delete[] samplers;
 }
 
@@ -283,26 +267,48 @@ void renderer::finalize_mvp(shader &shader)
     shader.unbind();
 }
 
-void renderer::finalize_ssbo() const
+void renderer::finalize_screen_mvp()
+{
+    screen_shader.bind();
+    glm::mat4 view = glm::mat4(1.f);
+    glm::mat4 proj = glm::ortho(0.f, (float)width, (float)height, 0.f, -1.f, 1.f);
+    screen_shader.set_mat4("view", view);
+    screen_shader.set_mat4("proj", proj);
+    screen_shader.unbind();
+}
+
+void renderer::finalize_ssbo(std::vector<glm::mat4> &mat) const
 {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER,
                     0,
-                    local_mats.size() * sizeof(glm::mat4),
-                    local_mats.data());
+                    mat.size() * sizeof(glm::mat4),
+                    mat.data());
 }
 
-void renderer::finalize_textures() const
+void renderer::finalize_textures(unsigned int *texture_arr, unsigned int count) const
 {
-    for (int i = 0; i < texture_count; i++)
-        glBindTextureUnit(i, textures[i]);
+    for (int i = 0; i < count; i++)
+        glBindTextureUnit(i, texture_arr[i]);
+}
+
+void renderer::update_screen_vertices() const
+{
+    glBindVertexArray(vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(GL_ARRAY_BUFFER,
+        0,
+        screen_vertices.size() * sizeof(vertex),
+        screen_vertices.data());
+    glBindVertexArray(0);
 }
 
 void renderer::update_vertices() const
 {
-    glBindVertexArray(m_vao);
+    glBindVertexArray(vao);
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER,
                     0,
                     vertices.size() * sizeof(vertex),
@@ -310,56 +316,44 @@ void renderer::update_vertices() const
     glBindVertexArray(0);
 }
 
-void renderer::g_update_vertices() const
+void renderer::m_draw_world()
 {
-    glBindVertexArray(g_vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, g_vbo);
-    glBufferSubData(GL_ARRAY_BUFFER,
-        0,
-        g_vertices.size() * sizeof(g_vertex),
-        g_vertices.data());
-    glBindVertexArray(0);
-}
-
-void renderer::m_draw()
-{
-    draw_call++;
     finalize_mvp(m_shader);
-    finalize_samplers();
-    finalize_ssbo();
-    finalize_textures();
+    finalize_samplers(m_shader);
+    finalize_ssbo(local_mats);
+    finalize_textures(textures, texture_count);
     update_vertices();
     m_shader.bind();
-    glBindVertexArray(m_vao);
+    glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-    flush();
+    flush(vertices, local_mats, textures, texture_count);
 }
 
-void renderer::g_draw()
+void renderer::draw_screen()
 {
-    draw_call++;
-    finalize_mvp(g_shader);
-    finalize_ssbo();
-    g_update_vertices();
-    g_shader.bind();
-    glBindVertexArray(g_vao);
-    glDrawArrays(GL_LINES, 0, g_vertices.size());
-    flush();
+    finalize_screen_mvp();
+    finalize_samplers(screen_shader);
+    finalize_ssbo(screen_mats);
+    finalize_textures(screen_textures, screen_texture_count);
+    update_screen_vertices();
+    screen_shader.bind();
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, screen_vertices.size());
+    flush(screen_vertices, screen_mats, screen_textures, screen_texture_count);
 }
 
 void renderer::draw()
 {
-    if (!geometric && vertices.size() > 0) m_draw();
-    else if (geometric && g_vertices.size() > 0) g_draw();
+    if (vertices.size() > 0) m_draw_world();
+    if (screen_vertices.size() > 0) draw_screen();
 }
 
 renderer::~renderer()
 {
     m_shader.destroy();
-    glDeleteVertexArrays(1, &m_vao);
-    glDeleteBuffers(1, &g_vbo);
-    glDeleteVertexArrays(1, &g_vao);
-    glDeleteBuffers(1, &g_vbo);
+    screen_shader.destroy();
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
     delete[] textures;
-} 
+    delete[] screen_textures;
+}

@@ -25,7 +25,9 @@
     <ClCompile Include="Source\2dphobe\renderer.cpp" />
     <ClCompile Include="Source\2dphobe\pb_app.cpp" />
     <ClCompile Include="Source\2dphobe\shader.cpp" />
+    <ClCompile Include="Source\2dphobe\utils.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\2dphobe\text.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\glad\glad.h" />
@@ -324,12 +326,15 @@
     <ClInclude Include="Source\2dphobe\renderer.h" />
     <ClInclude Include="Source\2dphobe\pb_app.h" />
     <ClInclude Include="Source\2dphobe\shader.h" />
+    <ClInclude Include="Source\2dphobe\utils.h" />
+    <ClInclude Include="Source\2dphobe\text.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Library\glfw3.lib" />
     <Library Include="Library\glm.lib" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="Data\Fonts\font.png" />
     <Image Include="Data\Textures\box.png" />
   </ItemGroup>
   <ItemGroup>

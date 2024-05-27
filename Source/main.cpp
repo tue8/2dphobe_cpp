@@ -10,21 +10,15 @@
 #include <stdlib.h>
 #include <GLFW/glfw3.h>
 #include <vector>
-#include <windows.h>
+#include <sstream>
 #include "2dphobe/pb_app.h"
+#include "2dphobe/text.h"
+#include "2dphobe/utils.h"
 
 #define WIN_WIDTH 800
 #define WIN_HEIGHT 800
 #define QUAD_SIZE 10
 #define QUAD_COUNT (WIN_WIDTH * WIN_HEIGHT) / (QUAD_SIZE * QUAD_SIZE)
-
-std::string get_exe_path()
-{
-    char buffer[MAX_PATH];
-    GetModuleFileName(NULL, buffer, MAX_PATH);
-    std::string f(buffer);
-    return f.substr(0, f.find_last_of("\\/"));
-}
 
 class app : public pb_app
 {
@@ -38,8 +32,7 @@ public:
 
     void init()
     {
-        std::string path = get_exe_path();
-        path = path.substr(0, path.length() - strlen("Binary"));
+        std::string path = utils::get_app_dir();
         path.append("Data\\Textures\\box.png");
 
         if (!load_texture(box_texture, path.c_str()))
@@ -84,12 +77,6 @@ public:
         if (key_input[GLFW_KEY_D])
             x += speed;
 
-        if (key_input[GLFW_KEY_E])
-        {
-            renderer& m_renderer = get_renderer();
-            m_renderer.set_geometric_mode(!m_renderer.get_geometric_mode());
-        }
-
         circle.pos += glm::vec3(x, y, 0.f);
     }
 
@@ -97,22 +84,22 @@ public:
     {
         renderer& m_renderer = get_renderer();
         view_area m_view_area = m_renderer.get_view_area();
-        obj view_area_obj;
-        view_area_obj.pos = m_view_area.pos;
-        view_area_obj.size = m_view_area.size;
+        obj view_area_obj(m_view_area.pos, m_view_area.size, glm::vec3(1.f));
 
-        int count = 0;
+        int obj_count = 0;
         for (obj& quad : quads)
         {
             if (view_area_obj.collide_with(quad))
             {
                 draw_quad(quad);
-                count++;
+                obj_count++;
             }
         }
-        std::cout << count << std::endl;
 
-        draw_circle(circle, 10);
+        std::stringstream obj_count_str;
+        obj_count_str << "Object count: " << obj_count;
+        draw_text(obj_count_str.str(), glm::vec3(0.f), glm::vec3(25.f, 25.f, 0.f), 30.f);
+        draw_text(obj_count_str.str(), glm::vec3(1.f), glm::vec3(20.f, 20.f, 0.f), 30.f);
     }
 };
 

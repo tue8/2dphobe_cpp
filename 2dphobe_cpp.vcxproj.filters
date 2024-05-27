@@ -33,7 +33,13 @@
     <ClCompile Include="Source\2dphobe\renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\2dphobe\quad.cpp">
+    <ClCompile Include="Source\2dphobe\obj.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\2dphobe\utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\2dphobe\text.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -923,7 +929,13 @@
     <ClInclude Include="Source\2dphobe\renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\2dphobe\quad.h">
+    <ClInclude Include="Source\2dphobe\obj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\2dphobe\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\2dphobe\text.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -933,6 +945,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Data\Textures\box.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Data\Fonts\font.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

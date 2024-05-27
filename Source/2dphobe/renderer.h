@@ -13,21 +13,13 @@ struct vec3
     float x, y, z;
 };
 
-
 struct vertex
 {
-    struct vec3 ndc;
-    struct vec2 tex_coord;
+    vec3 ndc;
+    vec2 tex_coord;
     float tex_index;
     float local_mat_index;
-    struct vec3 color;
-};
-
-struct g_vertex
-{
-    struct vec3 ndc;
-    float local_mat_index;
-    struct vec3 color;
+    vec3 color;
 };
 
 struct view_area
@@ -41,58 +33,61 @@ class renderer
 private:
     unsigned int width;
     unsigned int height;
-    bool geometric;
+
     glm::vec3 cam_view_pos;
     view_area m_view_area;
     float zoom_value;
 
     unsigned int ssbo;
 
-    unsigned int m_vao;
-    unsigned int m_vbo;
-
-    unsigned int g_vao;
-    unsigned int g_vbo;
+    unsigned int vao;
+    unsigned int vbo;
 
     std::vector<vertex> vertices;
-    std::vector<g_vertex> g_vertices;
+    std::vector<vertex> screen_vertices;
 
     unsigned int *textures;
     unsigned int texture_count;
     int max_textures;
 
+    unsigned int* screen_textures;
+    unsigned int screen_texture_count;
+
     shader m_shader;
-    shader g_shader;
+    shader screen_shader;
 
     std::vector<glm::mat4> local_mats;
+    std::vector<glm::mat4> screen_mats;
+
+    float zoom_point_x;
+    float zoom_point_y;
 public:
-    unsigned int draw_call;
-    glm::vec3 cam_drag_offset;
     ~renderer();
     void init(unsigned int width, unsigned int height);
     void draw();
-    void push_vert(const vertex &vert);
-    void g_push_vert(const g_vertex &vert);
+    void push_vert(const vertex& vert);
+    void push_screen_vert(const vertex &vert);
+    float get_screen_texture_index(float texure_id);
     float get_texture_index(float texure_id);
+    int push_screen_mat(const glm::mat4& screen_mats);
     int push_local_mat(const glm::mat4 &local_mat);
 
     glm::vec3& get_view_pos();
     view_area& get_view_area();
+    void set_zoom_point(float x, float y);
     void set_zoom(float zoom);
-
-    bool get_geometric_mode();
-    void set_geometric_mode(bool g);
-    void flush();
 private:
-    void m_draw();
-    void g_draw();
+    void flush(std::vector<vertex>& vert, std::vector<glm::mat4>& mats,
+               unsigned int*& t_arr, unsigned int& t_count);
+    void m_draw_world();
+    void draw_screen();
     void init_vao();
-    void g_init_vao();
     void init_ssbo();
-    void finalize_samplers();
+    void finalize_samplers(shader& shader);
     void finalize_mvp(shader &shader);
-    void finalize_ssbo() const;
-    void finalize_textures() const;
+    void finalize_screen_mvp();
+    void finalize_ssbo(std::vector<glm::mat4>& mat) const;
+    void finalize_textures(unsigned int* texture_arr, unsigned int count) const;
+    void update_screen_vertices() const;
     void update_vertices() const;
-    void g_update_vertices() const;
 };

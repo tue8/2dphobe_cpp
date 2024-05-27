@@ -11,6 +11,7 @@ public:
     glm::vec3 color;
 
     obj();
+    obj(glm::vec3 pos, glm::vec3 size, glm::vec3 color);
     bool collide_with(const obj& collide_obj);
     void load_texture(unsigned int id);
     glm::mat4 get_local_mat();

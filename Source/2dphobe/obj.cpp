@@ -11,6 +11,15 @@ obj::obj() : texture_id(0)
     color = glm::vec3(1.f);
 }
 
+obj::obj(glm::vec3 pos = glm::vec3(0.f),
+         glm::vec3 size = glm::vec3(100.f, 100.f, 0.f),
+         glm::vec3 color = glm::vec3(1.f)) : texture_id(0)
+{
+    this->pos = pos;
+    this->size = size;
+    this->color = color;
+}
+
 bool obj::collide_with(const obj& collide_obj)
 {
     glm::vec3 collide_pos = collide_obj.pos;

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <glm/gtc/matrix_transform.hpp>
+#include "utils.h"
 
 #define PI 3.14159265
 
@@ -63,10 +64,15 @@ pb_app::pb_app(unsigned int width,
 		created = false;
     }
 
-	glfwSetKeyCallback(window, key_callback);
-	stbi_set_flip_vertically_on_load(true);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	created = true;
+	glfwSetKeyCallback(window, key_callback);
+
+	unsigned int font_id = 0;
+	if (!load_texture(font_id, utils::get_app_dir().append("Data\\Fonts\\font.png").c_str()))
+		created = false;
+	text_handler.init(&m_renderer, (float)font_id);
 }
 
 void pb_app::end()
@@ -77,7 +83,7 @@ void pb_app::end()
 	end_signal = true;
 }
 
-bool pb_app::load_texture(unsigned int &texture_id, const char *texture_dir) const
+bool pb_app::load_texture(unsigned int &texture_id, const char *texture_dir)
 {
 	int width, height, color_channel;
 	unsigned char *data;
@@ -125,6 +131,11 @@ void pb_app::set_drag_zoom(bool dz)
 	b_drag_zoom = dz;
 }
 
+float pb_app::get_fps()
+{
+	return fps;
+}
+
 void pb_app::drag_zoom(float zoom_intensity)
 {
 	static bool hold = false;
@@ -141,8 +152,8 @@ void pb_app::drag_zoom(float zoom_intensity)
 	{
 		hold = true;
 		glm::vec3 cursor_pos(cursor_x, cursor_y, 0.f);
-		m_renderer.cam_drag_offset = cursor_pos - origin;
-		m_renderer.get_view_pos() += m_renderer.cam_drag_offset / zoom_value;
+		glm::vec3 diff = cursor_pos - origin;
+		m_renderer.get_view_pos() += diff / zoom_value;
 		origin = glm::vec3(cursor_x, cursor_y, 0.f);
 	}
 
@@ -197,11 +208,10 @@ bool pb_app::run()
 
 		m_renderer.draw();
 		std::stringstream ss;
-		ss << app_name << " | FPS: " << fps << " Draw calls: " << m_renderer.draw_call;
+		ss << app_name << " | FPS: " << fps;
 		glfwSetWindowTitle(window, ss.str().c_str());
 
 		glfwSwapBuffers(window);
-		m_renderer.draw_call = 0;
 	}
 
 	end();
@@ -213,15 +223,7 @@ bool pb_app::run()
 * draw functions
 */
 
-void pb_app::draw_quad(obj &quad)
-{
-	if (m_renderer.get_geometric_mode())
-		g_draw_quad(quad);
-	else
-		m_draw_quad(quad);
-}
-
-void pb_app::m_draw_quad(obj &quad)
+void pb_app::draw_quad(obj& quad)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(quad.get_local_mat());
 	float texture_index = m_renderer.get_texture_index((float)quad.get_texture_id());
@@ -275,68 +277,7 @@ void pb_app::m_draw_quad(obj &quad)
 		});
 }
 
-void pb_app::g_draw_quad(obj &quad)
-{
-	float local_mat_index = (float)m_renderer.push_local_mat(quad.get_local_mat());
-
-	m_renderer.g_push_vert({
-		{-0.5f, -0.5f,  1.f},
-		local_mat_index,
-		{quad.color.x, quad.color.y, quad.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{0.5f, -0.5f,  1.f},
-		local_mat_index,
-		{quad.color.x, quad.color.y, quad.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{0.5f,  0.5f,  1.f},
-		local_mat_index,
-		{quad.color.x, quad.color.y, quad.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{-0.5f,  0.5f,  1.f},
-		local_mat_index,
-		{quad.color.x, quad.color.y, quad.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{-0.5f,  0.5f,  1.f},
-		local_mat_index,
-		{quad.color.x, quad.color.y, quad.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{-0.5f, -0.5f,  1.f},
-		local_mat_index,
-		{quad.color.x, quad.color.y, quad.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{0.5f, 0.5f,  1.f},
-		local_mat_index,
-		{quad.color.x, quad.color.y, quad.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{0.5f,  -0.5f,  1.f},
-		local_mat_index,
-		{quad.color.x, quad.color.y, quad.color.z},
-		});
-}
-
 void pb_app::draw_tri(obj &tri)
-{
-	if (m_renderer.get_geometric_mode())
-		g_draw_tri(tri);
-	else
-		m_draw_tri(tri);
-}
-
-void pb_app::m_draw_tri(obj &tri)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(tri.get_local_mat());
 	float texture_index = m_renderer.get_texture_index((float)tri.get_texture_id());
@@ -367,56 +308,7 @@ void pb_app::m_draw_tri(obj &tri)
 		});
 }
 
-void pb_app::g_draw_tri(obj &tri)
-{
-	float local_mat_index = (float)m_renderer.push_local_mat(tri.get_local_mat());
-
-	m_renderer.g_push_vert({
-		{-0.5f,  0.5f,  1.f},
-		local_mat_index,
-		{tri.color.x, tri.color.y, tri.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{0.5f,  0.5f,  1.f},
-		local_mat_index,
-		{tri.color.x, tri.color.y, tri.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{0.5f,  0.5f,  1.f},
-		local_mat_index,
-		{tri.color.x, tri.color.y, tri.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{0.f,  -0.5f,  1.f},
-		local_mat_index,
-		{tri.color.x, tri.color.y, tri.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{0.f,  -0.5f,  1.f},
-		local_mat_index,
-		{tri.color.x, tri.color.y, tri.color.z},
-		});
-
-	m_renderer.g_push_vert({
-		{-0.5f,  0.5f,  1.f},
-		local_mat_index,
-		{tri.color.x, tri.color.y, tri.color.z},
-		});
-}
-
 void pb_app::draw_circle(obj &circle, float angle)
-{
-	if (m_renderer.get_geometric_mode())
-		g_draw_circle(circle, angle);
-	else
-		m_draw_circle(circle, angle);
-}
-
-void pb_app::m_draw_circle(obj &circle, float angle)
 {
 	float local_mat_index = (float)m_renderer.push_local_mat(circle.get_local_mat());
 	float last_x = -1.f;
@@ -475,38 +367,69 @@ void pb_app::m_draw_circle(obj &circle, float angle)
 		});
 }
 
-void pb_app::g_draw_circle(obj &circle, float angle)
+void pb_app::draw_char(obj& char_obj, texture_coords tc)
 {
-	float local_mat_index = (float)m_renderer.push_local_mat(circle.get_local_mat());
-	float last_x = -1.f;
-	float last_y = -1.f;
+	float local_mat_index = (float)m_renderer.push_screen_mat(char_obj.get_local_mat());
+	float texture_index = m_renderer.get_screen_texture_index(char_obj.get_texture_id());
 
-	int i = 0;
-	int count = 1;
-	float curr_x = (float)sin(angle * PI / 180);
-	float curr_y = (float)cos(angle * PI / 180);
+	vec2 start = tc.start;
+	vec2 offset = tc.offset;
 
-	while (i <= 360)
-	{
-		if (count % 2 == 0)
-		{
-			curr_x = (float)sin(i * PI / 180);
-			curr_y = (float)cos(i * PI / 180);
-		}
-
-		m_renderer.g_push_vert({
-			{curr_x, curr_y,  1.f},
-			local_mat_index,
-			{circle.color.x, circle.color.y, circle.color.z},
-			});
-
-		i += angle;
-		count++;
-	}
-
-	m_renderer.g_push_vert({
-		{(float)sin(angle * PI / 180), (float)cos(angle * PI / 180), 1.f},
+	m_renderer.push_screen_vert({
+		{-0.5f, -0.5f,  0.f},
+		{start.x , start.y},
+		texture_index,
 		local_mat_index,
-		{circle.color.x, circle.color.y, circle.color.z},
+		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
 		});
+
+	m_renderer.push_screen_vert({
+		{0.5f, -0.5f,  0.f},
+		{start.x + offset.x, start.y},
+		texture_index,
+		local_mat_index,
+		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
+		});
+
+	m_renderer.push_screen_vert({
+		{0.5f,  0.5f,  0.f},
+		{start.x + offset.x, start.y + offset.y},
+		texture_index,
+		local_mat_index,
+		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
+		});
+
+	m_renderer.push_screen_vert({
+		{0.5f,  0.5f,  0.f},
+		{start.x + offset.x, start.y + offset.y},
+		texture_index,
+		local_mat_index,
+		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
+		});
+
+	m_renderer.push_screen_vert({
+		{-0.5f,  0.5f,  0.f},
+		{start.x, start.y + offset.y},
+		texture_index,
+		local_mat_index,
+		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
+		});
+
+	m_renderer.push_screen_vert({
+		{-0.5f, -0.5f,  0.f},
+		{start.x, start.y},
+		texture_index,
+		local_mat_index,
+		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
+		});
+}
+
+void pb_app::draw_text(std::string msg, glm::vec3 color, glm::vec3 pos, float scale)
+{
+	for (size_t i = 0; i < msg.length(); ++i)
+	{
+		obj char_obj(glm::vec3(pos.x + scale * i, pos.y, 0.f), glm::vec3(scale), color);
+		char_obj.load_texture((unsigned int)text_handler.get_font_texture());
+		draw_char(char_obj, text_handler.find_charcoords(msg.at(i)));
+	}
 }
