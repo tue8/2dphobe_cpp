@@ -16,7 +16,7 @@ struct vec3
 struct vertex
 {
     vec3 ndc;
-    vec2 tex_coord;
+    vec2 texture_coords;
     float tex_index;
     float local_mat_index;
     vec3 color;
@@ -46,12 +46,10 @@ private:
     std::vector<vertex> vertices;
     std::vector<vertex> screen_vertices;
 
-    unsigned int *textures;
-    unsigned int texture_count;
-    int max_textures;
+    std::vector<unsigned int> textures;
+    std::vector<unsigned int> screen_textures;
 
-    unsigned int* screen_textures;
-    unsigned int screen_texture_count;
+    int max_textures;
 
     shader m_shader;
     shader screen_shader;
@@ -67,8 +65,8 @@ public:
     void draw();
     void push_vert(const vertex& vert);
     void push_screen_vert(const vertex &vert);
-    float get_screen_texture_index(float texure_id);
-    float get_texture_index(float texure_id);
+    float get_screen_texture_index(const float texure_id);
+    float get_texture_index(const float texure_id);
     int push_screen_mat(const glm::mat4& screen_mats);
     int push_local_mat(const glm::mat4 &local_mat);
 
@@ -78,7 +76,7 @@ public:
     void set_zoom(float zoom);
 private:
     void flush(std::vector<vertex>& vert, std::vector<glm::mat4>& mats,
-               unsigned int*& t_arr, unsigned int& t_count);
+               std::vector<unsigned int>& texture_arr);
     void m_draw_world();
     void draw_screen();
     void init_vao();
@@ -86,8 +84,8 @@ private:
     void finalize_samplers(shader& shader);
     void finalize_mvp(shader &shader);
     void finalize_screen_mvp();
-    void finalize_ssbo(std::vector<glm::mat4>& mat) const;
-    void finalize_textures(unsigned int* texture_arr, unsigned int count) const;
+    void finalize_ssbo(const std::vector<glm::mat4>& mat) const;
+    void finalize_textures(const std::vector<unsigned int>& texture_arr) const;
     void update_screen_vertices() const;
     void update_vertices() const;
 };

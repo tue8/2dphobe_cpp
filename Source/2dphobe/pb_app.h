@@ -1,7 +1,7 @@
 #pragma once
 #include "renderer.h"
 #include "obj.h"
-#include "text.h"
+#include "font_coords.h"
 #include <string>
 
 #define init_pb_app(a) a(unsigned int width, unsigned int height, const char *name) \
@@ -15,14 +15,16 @@ private:
     bool end_signal;
     bool created;
     bool b_drag_zoom;
+    unsigned int font_texture_id;
+
     double fps;
     float delta_time;
     std::string app_name;
+
     unsigned int width, height;
     double cursor_x, cursor_y;
     GLFWwindow *window;
     renderer m_renderer;
-    text text_handler;
 public:
     pb_app(unsigned int width, unsigned int height, const char *name);
     bool run();

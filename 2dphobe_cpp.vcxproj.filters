@@ -39,7 +39,7 @@
     <ClCompile Include="Source\2dphobe\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\2dphobe\text.cpp">
+    <ClCompile Include="Source\2dphobe\font_coords.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -935,7 +935,7 @@
     <ClInclude Include="Source\2dphobe\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\2dphobe\text.h">
+    <ClInclude Include="Source\2dphobe\font_coords.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

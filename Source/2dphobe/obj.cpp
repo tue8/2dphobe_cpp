@@ -20,19 +20,43 @@ obj::obj(glm::vec3 pos = glm::vec3(0.f),
     this->color = color;
 }
 
-bool obj::collide_with(const obj& collide_obj)
+bool obj::overlaps(const obj& o) const
 {
-    glm::vec3 collide_pos = collide_obj.pos;
-    glm::vec3 collide_size = collide_obj.size;
+    bool x_overlap = (pos.x + size.x >= o.pos.x) &&
+                     (o.pos.x + o.size.x > pos.x);
 
-    bool x_overlap = (pos.x + size.x > collide_pos.x &&
-                      collide_pos.x + collide_size.x > pos.x);
-
-    bool y_overlap = (pos.y + size.y > collide_pos.y &&
-                      collide_pos.y + collide_size.y > pos.y);
+    bool y_overlap = (pos.y + size.y >= o.pos.y) &&
+                     (o.pos.y + o.size.y > pos.y);
 
     return (x_overlap && y_overlap);
 }
+
+/*
+* make the container bigger in order to remove
+* ugly tile appearing/disappearing effect
+*/
+bool obj::contains_tile(const obj& o, float multiplier) const
+{
+    bool x_overlap = (pos.x + size.x + (o.size.x * multiplier) >= o.pos.x + o.size.x) &&
+                     (pos.x - (o.size.x * multiplier) <= o.pos.x);
+
+    bool y_overlap = (pos.y + size.y + (o.size.y * multiplier) >= o.pos.y + o.size.y) &&
+                     (pos.y - (o.size.y * multiplier) <= o.pos.y);
+
+    return (x_overlap && y_overlap);
+}
+
+bool obj::contains(const obj& o) const
+{
+    bool x_overlap = (pos.x + size.x >= o.pos.x + o.size.x) &&
+                     (pos.x <= o.pos.x);
+
+    bool y_overlap = (pos.y + size.y >= o.pos.y + o.size.y) &&
+                     (pos.y <= o.pos.y);
+
+    return (x_overlap && y_overlap);
+}
+
 
 void obj::load_texture(unsigned int id)
 {

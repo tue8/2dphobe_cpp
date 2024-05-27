@@ -69,10 +69,9 @@ pb_app::pb_app(unsigned int width,
 
 	glfwSetKeyCallback(window, key_callback);
 
-	unsigned int font_id = 0;
-	if (!load_texture(font_id, utils::get_app_dir().append("Data\\Fonts\\font.png").c_str()))
+	if (!load_texture(font_texture_id, utils::get_app_dir().append("Data\\Fonts\\font.png").c_str()))
 		created = false;
-	text_handler.init(&m_renderer, (float)font_id);
+	setup_font_coords();
 }
 
 void pb_app::end()
@@ -372,12 +371,9 @@ void pb_app::draw_char(obj& char_obj, texture_coords tc)
 	float local_mat_index = (float)m_renderer.push_screen_mat(char_obj.get_local_mat());
 	float texture_index = m_renderer.get_screen_texture_index(char_obj.get_texture_id());
 
-	vec2 start = tc.start;
-	vec2 offset = tc.offset;
-
 	m_renderer.push_screen_vert({
 		{-0.5f, -0.5f,  0.f},
-		{start.x , start.y},
+		{tc.start_x , tc.start_y},
 		texture_index,
 		local_mat_index,
 		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
@@ -385,7 +381,7 @@ void pb_app::draw_char(obj& char_obj, texture_coords tc)
 
 	m_renderer.push_screen_vert({
 		{0.5f, -0.5f,  0.f},
-		{start.x + offset.x, start.y},
+		{tc.start_x + tc.offset_x, tc.start_y},
 		texture_index,
 		local_mat_index,
 		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
@@ -393,7 +389,7 @@ void pb_app::draw_char(obj& char_obj, texture_coords tc)
 
 	m_renderer.push_screen_vert({
 		{0.5f,  0.5f,  0.f},
-		{start.x + offset.x, start.y + offset.y},
+		{tc.start_x + tc.offset_x, tc.start_y + tc.offset_y},
 		texture_index,
 		local_mat_index,
 		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
@@ -401,7 +397,7 @@ void pb_app::draw_char(obj& char_obj, texture_coords tc)
 
 	m_renderer.push_screen_vert({
 		{0.5f,  0.5f,  0.f},
-		{start.x + offset.x, start.y + offset.y},
+		{tc.start_x + tc.offset_x, tc.start_y + tc.offset_y},
 		texture_index,
 		local_mat_index,
 		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
@@ -409,7 +405,7 @@ void pb_app::draw_char(obj& char_obj, texture_coords tc)
 
 	m_renderer.push_screen_vert({
 		{-0.5f,  0.5f,  0.f},
-		{start.x, start.y + offset.y},
+		{tc.start_x, tc.start_y + tc.offset_y},
 		texture_index,
 		local_mat_index,
 		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
@@ -417,7 +413,7 @@ void pb_app::draw_char(obj& char_obj, texture_coords tc)
 
 	m_renderer.push_screen_vert({
 		{-0.5f, -0.5f,  0.f},
-		{start.x, start.y},
+		{tc.start_x, tc.start_y},
 		texture_index,
 		local_mat_index,
 		{char_obj.color.x, char_obj.color.y, char_obj.color.z},
@@ -429,7 +425,7 @@ void pb_app::draw_text(std::string msg, glm::vec3 color, glm::vec3 pos, float sc
 	for (size_t i = 0; i < msg.length(); ++i)
 	{
 		obj char_obj(glm::vec3(pos.x + scale * i, pos.y, 0.f), glm::vec3(scale), color);
-		char_obj.load_texture((unsigned int)text_handler.get_font_texture());
-		draw_char(char_obj, text_handler.find_charcoords(msg.at(i)));
+		char_obj.load_texture((unsigned int)font_texture_id);
+		draw_char(char_obj, find_charcoords(msg.at(i)));
 	}
 }

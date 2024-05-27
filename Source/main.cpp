@@ -12,13 +12,12 @@
 #include <vector>
 #include <sstream>
 #include "2dphobe/pb_app.h"
-#include "2dphobe/text.h"
 #include "2dphobe/utils.h"
 
-#define WIN_WIDTH 800
-#define WIN_HEIGHT 800
-#define QUAD_SIZE 10
-#define QUAD_COUNT (WIN_WIDTH * WIN_HEIGHT) / (QUAD_SIZE * QUAD_SIZE)
+constexpr unsigned int WIN_WIDTH = 800;
+constexpr unsigned int WIN_HEIGHT = 800;
+constexpr unsigned int QUAD_SIZE = 10;
+constexpr unsigned int QUAD_COUNT = (WIN_WIDTH * WIN_HEIGHT) / (QUAD_SIZE * QUAD_SIZE);
 
 class app : public pb_app
 {
@@ -30,7 +29,7 @@ private:
 public:
     init_pb_app(app);
 
-    void init()
+    void init() override
     {
         std::string path = utils::get_app_dir();
         path.append("Data\\Textures\\box.png");
@@ -58,11 +57,10 @@ public:
             }
         }
         
-        std::cout << "QUAD COUNT: " << quads.size() << std::endl;
         set_drag_zoom(true);
     }
 
-    void process_input(int* key_input, float dt)
+    void process_input(int* key_input, float dt) override
     {
         float x = 0;
         float y = 0;
@@ -77,10 +75,10 @@ public:
         if (key_input[GLFW_KEY_D])
             x += speed;
 
-        circle.pos += glm::vec3(x, y, 0.f);
+        quads.at(0).pos += glm::vec3(x, y, 0.f);
     }
 
-    void render()
+    void render() override
     {
         renderer& m_renderer = get_renderer();
         view_area m_view_area = m_renderer.get_view_area();
@@ -89,7 +87,7 @@ public:
         int obj_count = 0;
         for (obj& quad : quads)
         {
-            if (view_area_obj.collide_with(quad))
+            if (view_area_obj.contains_tile(quad, 2.f))
             {
                 draw_quad(quad);
                 obj_count++;
@@ -97,9 +95,9 @@ public:
         }
 
         std::stringstream obj_count_str;
-        obj_count_str << "Object count: " << obj_count;
-        draw_text(obj_count_str.str(), glm::vec3(0.f), glm::vec3(25.f, 25.f, 0.f), 30.f);
-        draw_text(obj_count_str.str(), glm::vec3(1.f), glm::vec3(20.f, 20.f, 0.f), 30.f);
+        obj_count_str << "Rendering " << obj_count << " out of " << quads.size() << " quads";
+        draw_text(obj_count_str.str(), glm::vec3(0.f), glm::vec3(25.f, 25.f, 0.f), 20.f);
+        draw_text(obj_count_str.str(), glm::vec3(1.f), glm::vec3(20.f, 20.f, 0.f), 20.f);
     }
 };
 

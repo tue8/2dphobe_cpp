@@ -1,16 +1,22 @@
-#include "text.h"
+#include "font_coords.h"
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 
-#define CHAR_COUNT 84
-#define CHAR_OFFSET 18.f
-#define FONT_TEX_SIZE_X 574.f
-#define FONT_TEX_SIZE_Y 55.f
+constexpr int char_count = 84;
+constexpr float char_offset = 18.f;
+constexpr float texture_size_x = 574.f;
+constexpr float texture_size_y = 55.f;
 
-#define COORDS_OFFSET { CHAR_OFFSET / FONT_TEX_SIZE_X, CHAR_OFFSET / FONT_TEX_SIZE_Y }
-#define COORDS_START(c_x, c_y) { c_x / FONT_TEX_SIZE_X, c_y / FONT_TEX_SIZE_Y }
+constexpr void fill_font_coord(font_coord &d, char c, float x_offset, float y_offset)
+{
+	d.c = c;
+	d.t_coords.start_x = x_offset / texture_size_x;
+	d.t_coords.start_y = y_offset / texture_size_y;
+	d.t_coords.offset_x = char_offset / texture_size_x;
+	d.t_coords.offset_y = char_offset / texture_size_y;
+}
 
-text_coord text_coords[CHAR_COUNT];
+font_coord font_coords[char_count];
 
 static void setup_row(int* i, char c, int char_range, float x_offset, float y_offset)
 {
@@ -19,27 +25,23 @@ static void setup_row(int* i, char c, int char_range, float x_offset, float y_of
 	i_range = *i + char_range;
 	for (; *i <= i_range; (*i)++)
 	{
-		text_coord d;
-		d.c = c;
-		d.t_coords.start = COORDS_START(x_offset, y_offset);
-		d.t_coords.offset = COORDS_OFFSET;
-		memcpy(text_coords + (*i), &d, sizeof(text_coord));
+		font_coord d;
+		fill_font_coord(d, c, x_offset, y_offset);
+		memcpy(font_coords + (*i), &d, sizeof(font_coord));
 		c++;
-		x_offset += CHAR_OFFSET;
+		x_offset += char_offset;
 	}
 }
 
 static void setup_char(int* i, char c, float x_offset, float y_offset)
 {
-	text_coord d;
-	d.c = c;
-	d.t_coords.start = COORDS_START(x_offset, y_offset);
-	d.t_coords.offset = COORDS_OFFSET;
-	memcpy(text_coords + (*i), &d, sizeof(text_coord));
+	font_coord d;
+	fill_font_coord(d, c, x_offset, y_offset);
+	memcpy(font_coords + (*i), &d, sizeof(font_coord));
 	(*i)++;
 }
 
-void setup_text_coords()
+void setup_font_coords()
 {
 	int row_index = 0;
 	setup_row(&row_index, 'a', (int)('z' - 'a'), 0.f, 0.f);
@@ -65,22 +67,10 @@ void setup_text_coords()
 	setup_char(&row_index, '@', 556.f, 37.f);
 }
 
-void text::init(renderer* m_renderer, float font_texture)
+texture_coords find_charcoords(char c)
 {
-	this->m_renderer = m_renderer;
-	this->font_texture = font_texture;
-	setup_text_coords();
-}
-
-float text::get_font_texture()
-{
-	return font_texture;
-}
-
-texture_coords text::find_charcoords(char c)
-{
-	for (int i = 0; i < CHAR_COUNT; i++)
-		if (text_coords[i].c == c)
-			return text_coords[i].t_coords;
+	for (int i = 0; i < char_count; i++)
+		if (font_coords[i].c == c)
+			return font_coords[i].t_coords;
 	return {};
 }
