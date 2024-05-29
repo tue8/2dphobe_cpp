@@ -2,20 +2,16 @@
 
 #include <glm/glm.hpp>
 
-enum shader_type
-{
-	DEFAULT_SHADER,
-	SCREEN_SHADER,
-};
-
 class shader
 {
 private:
 	unsigned int id;
 	int link() const;
 	int create(unsigned int shader, const char **src) const;
+	bool init_shader(const char* vert_csrc, const char* frag_csrc, int max_textures);
 public:
-	int init(enum shader_type type, int max_textures);
+	bool init_world_shader(int max_textures);
+	bool init_screen_shader(int max_textures);
 	unsigned int get_id() const;
 	void bind();
 	void unbind();

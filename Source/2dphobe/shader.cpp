@@ -120,34 +120,28 @@ int shader::link() const
     return success;
 }
 
-int shader::init(enum shader_type type, int max_textures)
+bool shader::init_world_shader(int max_textures)
+{
+   return init_shader(vert_src, frag_src, max_textures);
+}
+
+bool shader::init_screen_shader(int max_textures)
+{
+    return init_shader(screen_vert_src, screen_frag_src, max_textures);
+}
+
+bool shader::init_shader(const char* vert_csrc, const char* frag_csrc, int max_textures)
 {
     unsigned int vertshader, fragshader;
-    char* vert_csrc = NULL;
-    char* frag_csrc = NULL;
-
-    switch (type)
-    {
-    case DEFAULT_SHADER:
-        vert_csrc = (char*)vert_src;
-        frag_csrc = (char*)malloc(strlen(frag_src) + 1);
-        sprintf(frag_csrc, frag_src, max_textures);
-        break;
-    case SCREEN_SHADER:
-        vert_csrc = (char*)screen_vert_src;
-        frag_csrc = (char*)malloc(strlen(screen_frag_src) + 1);
-        sprintf(frag_csrc, screen_frag_src, max_textures);
-        break;
-    }
-
-    sprintf(frag_csrc, (type == DEFAULT_SHADER) ? frag_src : screen_frag_src, max_textures);
+    char* new_frag_src = (char*)malloc(strlen(frag_csrc) + 1);
+    sprintf(new_frag_src, frag_csrc, max_textures);
 
     vertshader = glCreateShader(GL_VERTEX_SHADER);
     create(vertshader, (const char**)&vert_csrc);
 
     fragshader = glCreateShader(GL_FRAGMENT_SHADER);
-    create(fragshader, (const char**)&frag_csrc);
-    free(frag_csrc);
+    create(fragshader, (const char**)&new_frag_src);
+    free(new_frag_src);
 
     id = glCreateProgram();
     glAttachShader(id, vertshader);

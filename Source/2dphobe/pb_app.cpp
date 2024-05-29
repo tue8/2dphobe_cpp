@@ -224,10 +224,10 @@ bool pb_app::run()
 
 void pb_app::draw_quad(obj& quad)
 {
-	float local_mat_index = (float)m_renderer.push_local_mat(quad.get_local_mat());
-	float texture_index = m_renderer.get_texture_index((float)quad.get_texture_id());
+	float local_mat_index = (float)m_renderer.push_world_mat(quad.get_local_mat());
+	float texture_index = m_renderer.get_world_texture_index((float)quad.get_texture_id());
 
-	m_renderer.push_vert({
+	m_renderer.push_world_vert({
 		{-0.5f, -0.5f,  1.f},
 		{0.0f, 0.0f},
 		texture_index,
@@ -235,7 +235,7 @@ void pb_app::draw_quad(obj& quad)
 		{quad.color.x, quad.color.y, quad.color.z},
 		});
 
-	m_renderer.push_vert({
+	m_renderer.push_world_vert({
 		{0.5f, -0.5f,  1.f},
 		{1.0f, 0.0f},
 		texture_index,
@@ -243,7 +243,7 @@ void pb_app::draw_quad(obj& quad)
 		{quad.color.x, quad.color.y, quad.color.z},
 		});
 
-	m_renderer.push_vert({
+	m_renderer.push_world_vert({
 		{0.5f,  0.5f,  1.f},
 		{1.0f, 1.0f},
 		texture_index,
@@ -251,7 +251,7 @@ void pb_app::draw_quad(obj& quad)
 		{quad.color.x, quad.color.y, quad.color.z},
 		});
 
-	m_renderer.push_vert({
+	m_renderer.push_world_vert({
 		{0.5f,  0.5f,  1.f},
 		{1.0f, 1.0f},
 		texture_index,
@@ -259,7 +259,7 @@ void pb_app::draw_quad(obj& quad)
 		{quad.color.x, quad.color.y, quad.color.z},
 		});
 
-	m_renderer.push_vert({
+	m_renderer.push_world_vert({
 		{-0.5f,  0.5f,  1.f},
 		{0.0f, 1.0f},
 		texture_index,
@@ -267,7 +267,7 @@ void pb_app::draw_quad(obj& quad)
 		{quad.color.x, quad.color.y, quad.color.z},
 		});
 
-	m_renderer.push_vert({
+	m_renderer.push_world_vert({
 		{-0.5f, -0.5f,  1.f},
 		{0.0f, 0.0f},
 		texture_index,
@@ -278,10 +278,10 @@ void pb_app::draw_quad(obj& quad)
 
 void pb_app::draw_tri(obj &tri)
 {
-	float local_mat_index = (float)m_renderer.push_local_mat(tri.get_local_mat());
-	float texture_index = m_renderer.get_texture_index((float)tri.get_texture_id());
+	float local_mat_index = (float)m_renderer.push_world_mat(tri.get_local_mat());
+	float texture_index = m_renderer.get_world_texture_index((float)tri.get_texture_id());
 
-	m_renderer.push_vert({
+	m_renderer.push_world_vert({
 		{-0.5f,  0.5f,  1.f},
 		{0.f, 0.f},
 		texture_index,
@@ -290,7 +290,7 @@ void pb_app::draw_tri(obj &tri)
 		});
 
 
-	m_renderer.push_vert({
+	m_renderer.push_world_vert({
 		{0.5f,  0.5f,  1.f},
 		{1.f, 0.f},
 		texture_index,
@@ -298,7 +298,7 @@ void pb_app::draw_tri(obj &tri)
 		{tri.color.x, tri.color.y, tri.color.z},
 		});
 
-	m_renderer.push_vert({
+	m_renderer.push_world_vert({
 		{0.f,  -0.5f,  1.f},
 		{0.5f, 1.f},
 		texture_index,
@@ -309,7 +309,7 @@ void pb_app::draw_tri(obj &tri)
 
 void pb_app::draw_circle(obj &circle, float angle)
 {
-	float local_mat_index = (float)m_renderer.push_local_mat(circle.get_local_mat());
+	float local_mat_index = (float)m_renderer.push_world_mat(circle.get_local_mat());
 	float last_x = -1.f;
 	float last_y = -1.f;
 
@@ -326,7 +326,7 @@ void pb_app::draw_circle(obj &circle, float angle)
 			curr_y = (float)cos(i * PI / 180);
 		}
 
-		m_renderer.push_vert({
+		m_renderer.push_world_vert({
 			{curr_x, curr_y,  1.f},
 			{0.f, 0.f},
 			0,
@@ -336,7 +336,7 @@ void pb_app::draw_circle(obj &circle, float angle)
 
 		if (count % 2 == 0)
 		{
-			m_renderer.push_vert({
+			m_renderer.push_world_vert({
 				{0.f, 0.f,  1.f},
 				{0.f, 0.f},
 				0,
@@ -349,7 +349,7 @@ void pb_app::draw_circle(obj &circle, float angle)
 		count++;
 	}
 
-	m_renderer.push_vert({
+	m_renderer.push_world_vert({
 		{(float)sin(angle * PI / 180), (float)cos(angle * PI / 180), 1.f},
 		{0.f, 0.f},
 		0,
@@ -357,7 +357,7 @@ void pb_app::draw_circle(obj &circle, float angle)
 		{circle.color.x, circle.color.y, circle.color.z},
 		});
 
-	m_renderer.push_vert({
+	m_renderer.push_world_vert({
 		{0.f, 0.f,  1.f},
 		{0.f, 0.f},
 		0,

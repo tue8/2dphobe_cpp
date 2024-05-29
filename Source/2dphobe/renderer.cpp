@@ -3,8 +3,29 @@
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 
-constexpr int quad_vertices = 6;
-constexpr int max_quad = 3000;
+/* Camera */
+glm::vec3& renderer::get_view_pos()
+{
+    return cam_view_pos;
+}
+
+view_area &renderer::get_view_area()
+{
+    return m_view_area;
+}
+
+void renderer::set_zoom_point(float x, float y)
+{
+    zoom_point_x = x;
+    zoom_point_y = y;
+}
+
+void renderer::set_zoom(float zoom)
+{
+    zoom_value = zoom;
+}
+
+/**/
 
 void renderer::init_vao()
 {
@@ -24,7 +45,7 @@ void renderer::init_vao()
         GL_FLOAT,
         GL_FALSE,
         sizeof(vertex),
-        (void *)offsetof(vertex, ndc));
+        (void*)offsetof(vertex, ndc));
 
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1,
@@ -32,7 +53,7 @@ void renderer::init_vao()
         GL_FLOAT,
         GL_FALSE,
         sizeof(vertex),
-        (void *)offsetof(vertex, texture_coords));
+        (void*)offsetof(vertex, texture_coords));
 
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2,
@@ -40,7 +61,7 @@ void renderer::init_vao()
         GL_FLOAT,
         GL_FALSE,
         sizeof(vertex),
-        (void *)offsetof(vertex, tex_index));
+        (void*)offsetof(vertex, texture_index));
 
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3,
@@ -48,7 +69,7 @@ void renderer::init_vao()
         GL_FLOAT,
         GL_FALSE,
         sizeof(vertex),
-        (void *)offsetof(vertex, local_mat_index));
+        (void*)offsetof(vertex, mat_index));
 
     glEnableVertexAttribArray(4);
     glVertexAttribPointer(4,
@@ -56,7 +77,7 @@ void renderer::init_vao()
         GL_FLOAT,
         GL_FALSE,
         sizeof(vertex),
-        (void *)offsetof(vertex, color));
+        (void*)offsetof(vertex, color));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -82,8 +103,8 @@ void renderer::init(unsigned int width, unsigned int height)
 
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_textures);
 
-    m_shader.init(DEFAULT_SHADER, max_textures);
-    screen_shader.init(SCREEN_SHADER, max_textures);
+    world_shader.init_world_shader(max_textures);
+    screen_shader.init_screen_shader(max_textures);
 
     init_vao();
     init_ssbo();
@@ -96,74 +117,14 @@ void renderer::init(unsigned int width, unsigned int height)
     zoom_point_y = height / 2;
 }
 
-/*
-* We don't need to handle vertices exceed limit
-* since push_local_mat() already did that.
-*/
-void renderer::push_vert(const vertex &vert)
-{
-    vertices.push_back(vert);
-}
-
-void renderer::push_screen_vert(const vertex& vert)
-{
-    screen_vertices.push_back(vert);
-}
-
-
-int renderer::push_local_mat(const glm::mat4 &local_mat)
-{
-    if (local_mats.size() + 1 >= max_quad)
-        draw();
-    local_mats.push_back(local_mat);
-    return local_mats.size() - 1;
-}
-
-int renderer::push_screen_mat(const glm::mat4& screen_mat)
-{
-    if (screen_mats.size() + 1 >= max_quad)
-        draw();
-    screen_mats.push_back(screen_mat);
-    return screen_mats.size() - 1;
-}
-
-glm::vec3& renderer::get_view_pos()
-{
-    return cam_view_pos;
-}
-
-view_area &renderer::get_view_area()
-{
-    return m_view_area;
-}
-
-void renderer::set_zoom_point(float x, float y)
-{
-    zoom_point_x = x;
-    zoom_point_y = y;
-}
-
-void renderer::set_zoom(float zoom)
-{
-    zoom_value = zoom;
-}
-
-void renderer::flush(std::vector<vertex>& vert, std::vector<glm::mat4>& mats,
-                     std::vector<unsigned int>& texture_arr)
-{
-    if (!vert.empty()) vert.clear();
-    if (!mats.empty()) mats.clear();
-    if (!texture_arr.empty()) texture_arr.empty();
-}
-
-float renderer::get_texture_index(float texure_id)
+float renderer::get_texture_index(std::vector<unsigned int> &t_arr, float texture_id)
 {
     float tex_index;
     bool tex_find = false;
 
-    for (int i = 0; i < textures.size(); i++)
+    for (int i = 0; i < t_arr.size(); i++)
     {
-        if (textures.at(i) == texure_id)
+        if (t_arr.at(i) == texture_id)
         {
             tex_index = (float)i;
             tex_find = true;
@@ -173,36 +134,10 @@ float renderer::get_texture_index(float texure_id)
 
     if (!tex_find)
     {
-        if (textures.size() > max_textures - 1)
+        if (t_arr.size() > max_textures - 1)
             draw();
-        textures.push_back((unsigned int)texure_id);
-        tex_index = (float)textures.size();
-    }
-
-    return tex_index;
-}
-
-float renderer::get_screen_texture_index(float texure_id)
-{
-    float tex_index;
-    bool tex_find = false;
-
-    for (int i = 0; i < screen_textures.size(); i++)
-    {
-        if (screen_textures.at(i) == texure_id)
-        {
-            tex_index = (float)i;
-            tex_find = true;
-            break;
-        }
-    }
-
-    if (!tex_find)
-    {
-        if (screen_textures.size() > max_textures - 1)
-            draw();
-        screen_textures.push_back((unsigned int)texure_id);
-        tex_index = (float)screen_textures.size();
+        t_arr.push_back((unsigned int)texture_id);
+        tex_index = (float)t_arr.size() - 1;
     }
 
     return tex_index;
@@ -224,12 +159,89 @@ void renderer::finalize_samplers(shader &shader)
     delete[] samplers;
 }
 
-void renderer::finalize_mvp(shader &shader)
+void renderer::finalize_ssbo(const std::vector<glm::mat4> &mat) const
 {
-    shader.bind();
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER,
+                    0,
+                    mat.size() * sizeof(glm::mat4),
+                    mat.data());
+}
+
+void renderer::finalize_textures(const std::vector<unsigned int>& t_arr) const
+{
+    for (int i = 0; i < t_arr.size(); i++)
+        glBindTextureUnit(i, t_arr.at(i));
+}
+
+void renderer::update_vertices(const std::vector<vertex>& vertices) const
+{
+    glBindVertexArray(vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(GL_ARRAY_BUFFER,
+                    0,
+                    vertices.size() * sizeof(vertex),
+                    vertices.data());
+    glBindVertexArray(0);
+}
+
+/*
+* We don't need to handle vertices exceed limit
+* since push_world_mat() already did that.
+*/
+void renderer::push_world_vert(const vertex& vert)
+{
+    world_vertices.push_back(vert);
+}
+
+void renderer::push_screen_vert(const vertex& vert)
+{
+    screen_vertices.push_back(vert);
+}
+
+int renderer::push_world_mat(const glm::mat4& world_mat)
+{
+    if (world_mats.size() + 1 >= max_quad)
+        draw_world();
+    world_mats.push_back(world_mat);
+    return world_mats.size() - 1;
+}
+
+int renderer::push_screen_mat(const glm::mat4& screen_mat)
+{
+    if (screen_mats.size() + 1 >= max_quad)
+        draw_screen();
+    screen_mats.push_back(screen_mat);
+    return screen_mats.size() - 1;
+}
+
+float renderer::get_world_texture_index(const float texture_id)
+{
+    return get_texture_index(world_textures, texture_id);
+}
+
+float renderer::get_screen_texture_index(const float texture_id)
+{
+    return get_texture_index(screen_textures, texture_id);
+}
+
+void renderer::update_world_vertices() const
+{
+    update_vertices(world_vertices);
+}
+
+void renderer::update_screen_vertices() const
+{
+    update_vertices(screen_vertices);
+}
+
+void renderer::finalize_world_mvp()
+{
+    world_shader.bind();
     glm::mat4 view = glm::mat4(1.f),
-              proj = glm::mat4(1.f),
-              zoom = glm::mat4(1.f);
+        proj = glm::mat4(1.f),
+        zoom = glm::mat4(1.f);
 
     view = glm::translate(view, cam_view_pos);
 
@@ -254,9 +266,9 @@ void renderer::finalize_mvp(shader &shader)
     m_view_area.size.x = (right - cam_view_pos.x) - m_view_area.pos.x;
     m_view_area.size.y = (bottom - cam_view_pos.y) - m_view_area.pos.y;
     proj = glm::ortho(left, right, bottom, top, -1.f, 1.f);
-    shader.set_mat4("view", view);
-    shader.set_mat4("proj", proj);
-    shader.unbind();
+    world_shader.set_mat4("view", view);
+    world_shader.set_mat4("proj", proj);
+    world_shader.unbind();
 }
 
 void renderer::finalize_screen_mvp()
@@ -269,56 +281,31 @@ void renderer::finalize_screen_mvp()
     screen_shader.unbind();
 }
 
-void renderer::finalize_ssbo(const std::vector<glm::mat4> &mat) const
+void renderer::flush_world()
 {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER,
-                    0,
-                    mat.size() * sizeof(glm::mat4),
-                    mat.data());
+    if (!world_vertices.empty()) world_vertices.clear();
+    if (!world_mats.empty()) world_mats.clear();
+    if (!world_textures.empty()) world_textures.clear();
 }
 
-void renderer::finalize_textures(const std::vector<unsigned int>& texture_arr) const
+void renderer::flush_screen()
 {
-    for (int i = 0; i < texture_arr.size(); i++)
-        glBindTextureUnit(i, texture_arr.at(i));
+    if (!screen_vertices.empty()) screen_vertices.clear();
+    if (!screen_mats.empty()) screen_mats.clear();
+    if (!screen_textures.empty()) screen_textures.clear();
 }
 
-void renderer::update_screen_vertices() const
+void renderer::draw_world()
 {
+    finalize_world_mvp();
+    finalize_samplers(world_shader);
+    finalize_ssbo(world_mats);
+    finalize_textures(world_textures);
+    update_world_vertices();
+    world_shader.bind();
     glBindVertexArray(vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER,
-        0,
-        screen_vertices.size() * sizeof(vertex),
-        screen_vertices.data());
-    glBindVertexArray(0);
-}
-
-void renderer::update_vertices() const
-{
-    glBindVertexArray(vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER,
-                    0,
-                    vertices.size() * sizeof(vertex),
-                    vertices.data());
-    glBindVertexArray(0);
-}
-
-void renderer::m_draw_world()
-{
-    finalize_mvp(m_shader);
-    finalize_samplers(m_shader);
-    finalize_ssbo(local_mats);
-    finalize_textures(textures);
-    update_vertices();
-    m_shader.bind();
-    glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-    flush(vertices, local_mats, textures);
+    glDrawArrays(GL_TRIANGLES, 0, world_vertices.size());
+    flush_world();
 }
 
 void renderer::draw_screen()
@@ -331,18 +318,18 @@ void renderer::draw_screen()
     screen_shader.bind();
     glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, screen_vertices.size());
-    flush(screen_vertices, screen_mats, screen_textures);
+    flush_screen();
 }
 
 void renderer::draw()
 {
-    if (vertices.size() > 0) m_draw_world();
+    if (world_vertices.size() > 0) draw_world();
     if (screen_vertices.size() > 0) draw_screen();
 }
 
 renderer::~renderer()
 {
-    m_shader.destroy();
+    world_shader.destroy();
     screen_shader.destroy();
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
