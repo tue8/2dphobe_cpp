@@ -14,10 +14,10 @@
 #include "2dphobe/pb_app.h"
 #include "2dphobe/utils.h"
 
-constexpr unsigned int WIN_WIDTH = 800;
-constexpr unsigned int WIN_HEIGHT = 800;
-constexpr unsigned int QUAD_SIZE = 10;
-constexpr unsigned int QUAD_COUNT = (WIN_WIDTH * WIN_HEIGHT) / (QUAD_SIZE * QUAD_SIZE);
+constexpr unsigned int win_width = 800;
+constexpr unsigned int win_height = 800;
+constexpr unsigned int quad_size = 10;
+constexpr unsigned int quad_count = (win_width * win_height) / (quad_size * quad_size);
 
 class app : public pb_app
 {
@@ -27,7 +27,7 @@ private:
     obj circle;
     obj tri;
 public:
-    init_pb_app(app);
+    using pb_app::pb_app;
 
     void init() override
     {
@@ -37,20 +37,20 @@ public:
         if (!load_texture(box_texture, path.c_str()))
             end();
 
-        circle.size = glm::vec3(QUAD_SIZE, QUAD_SIZE, 0.f);
+        circle.size = glm::vec3(quad_size, quad_size, 0.f);
         circle.pos = glm::vec3(50.f, 50.f, 0.f);
         circle.load_texture(box_texture);
 
-        tri.size = glm::vec3(QUAD_SIZE * 2, QUAD_SIZE * 2, 0.f);
+        tri.size = glm::vec3(quad_size * 2, quad_size * 2, 0.f);
         tri.pos = glm::vec3(250.f, 50.f, 0.f);
         tri.load_texture(box_texture);
 
-        for (float j = 0; j < WIN_WIDTH; j += QUAD_SIZE)
+        for (float j = 0; j < win_width; j += quad_size)
         {
-            for (float k = 0; k < WIN_HEIGHT; k += QUAD_SIZE)
+            for (float k = 0; k < win_height; k += quad_size)
             {
                 obj quad;
-                quad.size = glm::vec3(QUAD_SIZE, QUAD_SIZE, 0.f);
+                quad.size = glm::vec3(quad_size, quad_size, 0.f);
                 quad.pos = glm::vec3(j, k, 0.f);
                 quad.load_texture(box_texture);
                 quads.push_back(quad);
@@ -80,8 +80,8 @@ public:
 
     void render() override
     {
-        renderer& m_renderer = get_renderer();
-        view_area m_view_area = m_renderer.get_view_area();
+        world& m_world = get_world();
+        view_area m_view_area = m_world.get_view_area();
         obj view_area_obj(m_view_area.pos, m_view_area.size, glm::vec3(1.f));
 
         int obj_count = 0;
@@ -103,7 +103,7 @@ public:
 
 int main()
 {
-    app main_app(WIN_WIDTH, WIN_HEIGHT, "2dphobe_cpp");
+    app main_app(win_width, win_height, "2dphobe_cpp");
     if (!main_app.run())
         return -1;
     return 0;

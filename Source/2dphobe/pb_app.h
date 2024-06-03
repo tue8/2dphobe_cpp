@@ -1,5 +1,6 @@
 #pragma once
-#include "renderer.h"
+#include "world.h"
+#include "screen.h"
 #include "obj.h"
 #include "font_coords.h"
 #include <string>
@@ -25,6 +26,8 @@ private:
     double cursor_x, cursor_y;
     GLFWwindow *window;
     renderer m_renderer;
+    world m_world;
+    screen m_screen;
 public:
     pb_app(unsigned int width, unsigned int height, const char *name);
     bool run();
@@ -35,8 +38,9 @@ public:
     void draw_text(std::string msg, glm::vec3 color, glm::vec3 pos, float scale);
     bool load_texture(unsigned int &texture_id, const char *texture_dir);
     void set_drag_zoom(bool dc);
-    renderer& get_renderer();
-    float get_fps();
+    world& get_world();
+    screen& get_screen();
+    float get_fps() const;
 private:
     void draw_char(obj& char_obj, texture_coords tc);
     void drag_zoom(float zoom_intensity);

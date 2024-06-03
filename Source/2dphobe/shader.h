@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include "render_type.h"
 
 class shader
 {
@@ -10,8 +11,7 @@ private:
 	int create(unsigned int shader, const char **src) const;
 	bool init_shader(const char* vert_csrc, const char* frag_csrc, int max_textures);
 public:
-	bool init_world_shader(int max_textures);
-	bool init_screen_shader(int max_textures);
+	bool init(render_type type, int max_textures);
 	unsigned int get_id() const;
 	void bind();
 	void unbind();

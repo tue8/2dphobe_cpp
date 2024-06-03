@@ -21,13 +21,16 @@
   <ItemGroup>
     <ClCompile Include="Include\glad\glad.c" />
     <ClCompile Include="Include\glm\detail\glm.cpp" />
+    <ClCompile Include="Source\2dphobe\screen.cpp" />
     <ClCompile Include="Source\2dphobe\obj.cpp" />
     <ClCompile Include="Source\2dphobe\renderer.cpp" />
     <ClCompile Include="Source\2dphobe\pb_app.cpp" />
+    <ClCompile Include="Source\2dphobe\render_instance.cpp" />
     <ClCompile Include="Source\2dphobe\shader.cpp" />
     <ClCompile Include="Source\2dphobe\utils.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\2dphobe\font_coords.cpp" />
+    <ClCompile Include="Source\2dphobe\world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\glad\glad.h" />
@@ -322,12 +325,16 @@
     <ClInclude Include="Include\glm\vector_relational.hpp" />
     <ClInclude Include="Include\KHR\khrplatform.h" />
     <ClInclude Include="Include\stb_image.h" />
+    <ClInclude Include="Source\2dphobe\screen.h" />
     <ClInclude Include="Source\2dphobe\obj.h" />
     <ClInclude Include="Source\2dphobe\renderer.h" />
     <ClInclude Include="Source\2dphobe\pb_app.h" />
+    <ClInclude Include="Source\2dphobe\render_instance.h" />
+    <ClInclude Include="Source\2dphobe\render_type.h" />
     <ClInclude Include="Source\2dphobe\shader.h" />
     <ClInclude Include="Source\2dphobe\utils.h" />
     <ClInclude Include="Source\2dphobe\font_coords.h" />
+    <ClInclude Include="Source\2dphobe\world.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Library\glfw3.lib" />

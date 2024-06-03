@@ -5,7 +5,7 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
-const char *vert_src =
+const char *world_vert_src =
 "#version 430 core\n"
 "layout (location = 0) in vec3 vpos;\n"
 "layout (location = 1) in vec2 vtexcoord;\n"
@@ -35,7 +35,7 @@ const char *vert_src =
 "   fcolor = vcolor;\n"
 "}\0";
 
-const char *frag_src =
+const char * world_frag_src =
 "#version 430 core\n"
 "in vec2 ftexcoord;\n"
 "in float ftexid;"
@@ -120,14 +120,23 @@ int shader::link() const
     return success;
 }
 
-bool shader::init_world_shader(int max_textures)
+bool shader::init(render_type type, int max_textures)
 {
-   return init_shader(vert_src, frag_src, max_textures);
-}
+    switch (type)
+    {
+    case WORLD: 
+        init_shader(world_vert_src,
+                    world_frag_src,
+                    max_textures); 
+        break;
+    case SCREEN:
+        init_shader(screen_vert_src,
+                    screen_frag_src,
+                    max_textures);
+        break;
+    }
 
-bool shader::init_screen_shader(int max_textures)
-{
-    return init_shader(screen_vert_src, screen_frag_src, max_textures);
+    return false;
 }
 
 bool shader::init_shader(const char* vert_csrc, const char* frag_csrc, int max_textures)
