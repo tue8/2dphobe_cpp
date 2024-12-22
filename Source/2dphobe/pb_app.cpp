@@ -49,6 +49,7 @@ pb_app::pb_app(unsigned int width,
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_true);
 #endif
     window = glfwCreateWindow(width, height, name, NULL, NULL);
+
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -68,6 +69,7 @@ pb_app::pb_app(unsigned int width,
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glfwSetKeyCallback(window, key_callback);
+	glfwSwapInterval(0);
 
 	if (!load_texture(font_texture_id, utils::get_app_dir().append("Data\\Fonts\\font.png").c_str()))
 		created = false;
@@ -86,14 +88,14 @@ bool pb_app::load_texture(unsigned int &texture_id, const char *texture_dir)
 {
 	int width, height, color_channel;
 	unsigned char *data;
-	GLenum format;
+	GLenum format = GL_RGBA;
 
 	glGenTextures(1, &texture_id);
 	glBindTexture(GL_TEXTURE_2D, texture_id);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	data = stbi_load(texture_dir, &width, &height, &color_channel, 0);
 	if (!data)
 	{
@@ -140,11 +142,23 @@ float pb_app::get_fps() const
 	return fps;
 }
 
+float pb_app::get_zoom(float intensity)
+{
+	float res = 1.f + cam_scroll_offset * intensity;
+	return res > 1.f ? res : 1.f;
+}
+
+glm::vec3 pb_app::get_mouse_pos()
+{
+	return glm::vec3(cursor_x, cursor_y, 0.f);
+}
+
 void pb_app::drag_zoom(float zoom_intensity)
 {
 	static bool hold = false;
 	static glm::vec3 origin;
-	float zoom_value = 1.f + cam_scroll_offset * zoom_intensity;
+	float zoom_value = get_zoom(zoom_intensity);
+
 	m_world.set_zoom(zoom_value);
 
 	if (!hold)
@@ -152,7 +166,7 @@ void pb_app::drag_zoom(float zoom_intensity)
 		origin = glm::vec3(cursor_x, cursor_y, 0.f);
 	}
 
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
 	{
 		hold = true;
 		glm::vec3 cursor_pos(cursor_x, cursor_y, 0.f);
@@ -161,7 +175,7 @@ void pb_app::drag_zoom(float zoom_intensity)
 		origin = glm::vec3(cursor_x, cursor_y, 0.f);
 	}
 
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_RELEASE)
 		hold = false;
 }
 
@@ -203,7 +217,7 @@ bool pb_app::run()
 		glfwPollEvents();
 		glfwGetCursorPos(window, &cursor_x, &cursor_y);
 		glfwSetScrollCallback(window, scroll_offset);
-		process_input(keys, delta_time);
+		process_input(keys, window, delta_time);
 
 		if (b_drag_zoom)
 			drag_zoom(0.25f);
@@ -430,10 +444,20 @@ void pb_app::draw_char(obj& char_obj, texture_coords tc)
 
 void pb_app::draw_text(std::string msg, glm::vec3 color, glm::vec3 pos, float scale)
 {
+	float pos_y = pos.y;
+	size_t bleh = 0;
 	for (size_t i = 0; i < msg.length(); ++i)
 	{
-		obj char_obj(glm::vec3(pos.x + scale * i, pos.y, 0.f), glm::vec3(scale), color);
+		obj char_obj(glm::vec3(pos.x + scale * bleh, pos_y, 0.f), glm::vec3(scale), color);
 		char_obj.load_texture((unsigned int)font_texture_id);
-		draw_char(char_obj, find_charcoords(msg.at(i)));
+		char c = msg.at(i);
+		if (c == '\n')
+		{
+			pos_y += scale;
+			bleh = -1;
+		}
+		else
+			draw_char(char_obj, find_charcoords(c));
+		bleh++;
 	}
 }

@@ -4,7 +4,7 @@
 class obj
 {
 private:
-    unsigned int texture_id;
+    unsigned int texture_id = 100;
 public:
     glm::vec3 pos;
     glm::vec3 size;

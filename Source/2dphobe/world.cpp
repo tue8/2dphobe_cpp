@@ -49,21 +49,17 @@ void world::finalize_cam()
 
     view = glm::translate(view, cam_view_pos);
 
-    float zoom_point_x = res.width / 2.f;
-    float zoom_point_y = res.height / 2.f;
-
     static float left = 0.f;
     static float right = res.width;
     static float bottom = res.height;
     static float top = 0.f;
 
-    if (zoom_value > 0)
-    {
-        left = (0 - zoom_point_x) / zoom_value + zoom_point_x;
-        right = (res.width - zoom_point_x) / zoom_value + zoom_point_x;
-        bottom = (res.height - zoom_point_y) / zoom_value + zoom_point_y;
-        top = (0 - zoom_point_y) / zoom_value + zoom_point_y;
-    }
+
+    left = (0 - zoom_point_x) / zoom_value + zoom_point_x;
+    right = (res.width - zoom_point_x) / zoom_value + zoom_point_x;
+    bottom = (res.height - zoom_point_y) / zoom_value + zoom_point_y;
+    top = (0 - zoom_point_y) / zoom_value + zoom_point_y;
+
 
     m_view_area.pos.x = left - cam_view_pos.x;
     m_view_area.pos.y = top - cam_view_pos.y;

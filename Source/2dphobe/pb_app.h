@@ -41,13 +41,15 @@ public:
     world& get_world();
     screen& get_screen();
     float get_fps() const;
+    float get_zoom(float intensity);
+    glm::vec3 get_mouse_pos();
 private:
     void draw_char(obj& char_obj, texture_coords tc);
     void drag_zoom(float zoom_intensity);
 public:
     virtual void init() {}
     virtual void update(float dt) {}
-    virtual void process_input(int *key_input, float dt) {}
+    virtual void process_input(int *key_input, GLFWwindow* window, float dt) {}
     virtual void render() {}
     virtual void cleanup() {}
 };
